@@ -605,6 +605,6 @@ oc new-app nodejs:8~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
   --name=web
 
 # Expose Services
-oc expose service inventory
+oc expose service web
 oc expose service gateway
 ----
