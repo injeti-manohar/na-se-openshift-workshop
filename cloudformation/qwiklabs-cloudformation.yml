@@ -978,7 +978,7 @@ Resources:
                     etcd
                     glusterfs
                     #scaleup_new_nodes
-                    #cnsinfra_glusterfs_registry
+                    glusterfs_registry
 
                     [OSEv3:vars]
                     ansible_become=true
@@ -1019,36 +1019,36 @@ Resources:
                     openshift_storage_glusterfs_storageclass=true
                     openshift_storage_glusterfs_storageclass_default=true
                     openshift_storage_glusterfs_block_deploy=false
-                    #cnsinfra_openshift_storage_glusterfs_registry_version=v3.9
-                    #cnsinfra_openshift_storage_glusterfs_registry_heketi_version=v3.9
-                    #cnsinfra_openshift_storage_glusterfs_registry_block_version=v3.9
-                    #cnsinfra_openshift_storage_glusterfs_registry_s3_version=v3.9
-                    #cnsinfra_openshift_storage_glusterfs_registry_namespace=infra-storage
-                    #cnsinfra_openshift_storage_glusterfs_registry_heketi_admin_key=myS3cr3tpassw0rd
-                    #cnsinfra_openshift_storage_glusterfs_registry_storageclass=true
-                    #cnsinfra_openshift_storage_glusterfs_registry_block_deploy=true
-                    #cnsinfra_openshift_storage_glusterfs_registry_block_storageclass=true
-                    #cnsinfra_openshift_storage_glusterfs_registry_block_host_vol_create=true
-                    #cnsinfra_openshift_storage_glusterfs_registry_block_host_vol_size=30
+                    openshift_storage_glusterfs_registry_version=v3.9
+                    openshift_storage_glusterfs_registry_heketi_version=v3.9
+                    openshift_storage_glusterfs_registry_block_version=v3.9
+                    openshift_storage_glusterfs_registry_s3_version=v3.9
+                    openshift_storage_glusterfs_registry_namespace=infra-storage
+                    openshift_storage_glusterfs_registry_heketi_admin_key=myS3cr3tpassw0rd
+                    openshift_storage_glusterfs_registry_storageclass=true
+                    openshift_storage_glusterfs_registry_block_deploy=true
+                    openshift_storage_glusterfs_registry_block_storageclass=true
+                    openshift_storage_glusterfs_registry_block_host_vol_create=true
+                    openshift_storage_glusterfs_registry_block_host_vol_size=30
 
                     # metrics configs
-                    openshift_metrics_install_metrics=false
-                    #metrics_openshift_metrics_install_metrics=true
-                    #metrics_openshift_metrics_cassandra_storage_type=dynamic
-                    #metrics_openshift_metrics_cassandra_pvc_size=10Gi
-                    #metrics_openshift_metrics_cassanda_pvc_storage_class_name=glusterfs-registry-block
-                    #metrics_openshift_metrics_hawkular_hostname=metrics.apps.${AWS::AccountId}.${PublicHostedZone}
+                    #openshift_metrics_install_metrics=false
+                    openshift_metrics_install_metrics=true
+                    openshift_metrics_cassandra_storage_type=dynamic
+                    openshift_metrics_cassandra_pvc_size=10Gi
+                    openshift_metrics_cassanda_pvc_storage_class_name=glusterfs-registry-block
+                    openshift_metrics_hawkular_hostname=metrics.apps.${AWS::AccountId}.${PublicHostedZone}
 
                     # logging configs
-                    openshift_logging_install_logging=false
-                    #logging_openshift_logging_install_logging=true
-                    #logging_openshift_logging_namespace=logging
-                    #logging_openshift_logging_es_pvc_dynamic=true
-                    #logging_openshift_logging_es_pvc_size=10Gi
-                    #logging_openshift_logging_es_pvc_storage_class_name=glusterfs-registry-block
-                    #logging_openshift_logging_es_memory_limit=2G
-                    #logging_openshift_logging_kibana_hostname=kibana.apps.${AWS::AccountId}.${PublicHostedZone}
-                    #logging_openshift_logging_public_master_url=https://kibana.apps.${AWS::AccountId}.${PublicHostedZone}
+                    #openshift_logging_install_logging=false
+                    openshift_logging_install_logging=true
+                    openshift_logging_namespace=logging
+                    openshift_logging_es_pvc_dynamic=true
+                    openshift_logging_es_pvc_size=10Gi
+                    openshift_logging_es_pvc_storage_class_name=glusterfs-registry-block
+                    openshift_logging_es_memory_limit=2G
+                    openshift_logging_kibana_hostname=kibana.apps.${AWS::AccountId}.${PublicHostedZone}
+                    openshift_logging_public_master_url=https://kibana.apps.${AWS::AccountId}.${PublicHostedZone}
 
                     # prometheus configs (future)
                     openshift_hosted_prometheus_deploy=true
@@ -1076,16 +1076,16 @@ Resources:
                     node02.internal.${PublicHostedZone} glusterfs_ip=${WorkerNode2.PrivateIp} glusterfs_zone=2 glusterfs_devices='[ "/dev/xvdd" ]'
                     node03.internal.${PublicHostedZone} glusterfs_ip=${WorkerNode3.PrivateIp} glusterfs_zone=3 glusterfs_devices='[ "/dev/xvdd" ]'
 
-                    #cnsinfra_[glusterfs_registry]
-                    #cnsinfra_node04.internal.${PublicHostedZone} glusterfs_ip=${WorkerNode4.PrivateIp} glusterfs_zone=1 glusterfs_devices='[ "/dev/xvdd" ]'
-                    #cnsinfra_node05.internal.${PublicHostedZone} glusterfs_ip=${WorkerNode5.PrivateIp} glusterfs_zone=2 glusterfs_devices='[ "/dev/xvdd" ]'
-                    #cnsinfra_node06.internal.${PublicHostedZone} glusterfs_ip=${WorkerNode6.PrivateIp} glusterfs_zone=3 glusterfs_devices='[ "/dev/xvdd" ]'
+                    [glusterfs_registry]
+                    node04.internal.${PublicHostedZone} glusterfs_ip=${WorkerNode4.PrivateIp} glusterfs_zone=1 glusterfs_devices='[ "/dev/xvdd" ]'
+                    node05.internal.${PublicHostedZone} glusterfs_ip=${WorkerNode5.PrivateIp} glusterfs_zone=2 glusterfs_devices='[ "/dev/xvdd" ]'
+                    node06.internal.${PublicHostedZone} glusterfs_ip=${WorkerNode6.PrivateIp} glusterfs_zone=3 glusterfs_devices='[ "/dev/xvdd" ]'
 
                     [glusterfs:vars]
                     ansible_become=true
 
-                    #cnsinfra_[glusterfs_registry:vars]
-                    #cnsinfra_ansible_become=true
+                    [glusterfs_registry:vars]
+                    ansible_become=true
 
                     [idm]
                     idm.internal.${PublicHostedZone}
