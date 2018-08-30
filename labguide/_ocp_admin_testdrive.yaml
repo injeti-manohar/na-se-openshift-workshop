@@ -12,7 +12,7 @@ modules:
   - installation
   - app-mgmt-basics
   - template-quota-limits
-  - ldap-groupsync
-  - infra-mgmt-basics
-  - cns
-  - skipping-ahead
+  - health
+  - fault-tolerance
+  - app-config
+  - continuous-delivery
