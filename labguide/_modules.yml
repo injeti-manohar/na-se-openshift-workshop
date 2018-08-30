@@ -89,12 +89,6 @@ modules:
     name: Application Management Basics
     requires:
       - installation
-  cluster-mgmt-basics:
-    name: Cluster Management Basics
-    requires:
-      - installation
-  ldap-groupsync:
-    name: Using External Authentication Providers (LDAP)
   template-quota-limits:
     name: Project Template, Quota, and Limits
     requires:
@@ -103,26 +97,11 @@ modules:
       CNS_STORAGECLASS: "glusterfs-storage"
       CNS_BLOCK_STORAGECLASS: "glusterfs-registry-block"
       CNS_INFRA_STORAGECLASS: "glusterfs-registry"
-  infra-mgmt-basics:
-    name: Infrastructure Management Basics
-    requires:
-      - installation
-    vars:
-      CNS_STORAGECLASS: "glusterfs-storage"
-      CNS_BLOCK_STORAGECLASS: "glusterfs-registry-block"
-      CNS_INFRA_STORAGECLASS: "glusterfs-registry"
-  cns:
-    name: Container-native Storage
-    requires:
-      - installation
-      - infra-mgmt-basics
-    vars:
-      HEKETI_ADMIN_PW: "myS3cr3tpassw0rd"
-      CNS_STORAGECLASS: "glusterfs-storage"
-      CNS_BLOCK_STORAGECLASS: "glusterfs-registry-block"
-      CNS_NAMESPACE: "storage"
-      CNS_INFRA_NAMESPACE: "infra-storage"
-      NODE_BRICK_DEVICE: "/dev/xvdd"
-      NODE_BRICK_DEVICE2: "/dev/xvde"
-  skipping-ahead:
-    name: Skipping modules
+  health:
+      name: Monitoring Application health
+  fault-tolerance:
+      name: Service Resilience and Fault fault-tolerance
+  app-config:
+      name: Application Configuration
+  continuous-delivery:
+      name: Continuous Delivery

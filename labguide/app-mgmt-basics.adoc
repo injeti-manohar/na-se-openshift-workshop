@@ -1,7 +1,7 @@
 ## Application Management Basics
-In this module, you will deploy a sample application using the `oc` tool and
-learn about some of the core concepts, fundamental objects, and basics of
-application management on OpenShift Container Platform.
+In this module, you will deploy a sample microservices application using the
+`oc` tool and learn about some of the core concepts, fundamental objects, and
+basics of application management on OpenShift Container Platform.
 
 [NOTE]
 ====
@@ -23,45 +23,79 @@ them, and users may be able to access multiple *Projects*.
 
 For this exercise, first create a *Project* to hold our resources:
 
+[source,bash,role=copypaste]
 ----
-oc new-project app-management
+oc new-project coolstore
 ----
 
-#### Deploy a Sample Application
+#### Deploy Microservices
 The `new-app` command provides a very simple way to tell OpenShift to run
 things. You simply provide it with one of a wide array of inputs, and it figures
 out what to do. Users will commonly use this command to get OpenShift to launch
 existing images, to create builds of source code and ultimately deploy them, to
 instantiate templates, and so on.
 
-You will now launch a specific image that exists on Dockerhub
+The first microservice we'll launch is our Inventory service. This service has
+been built using WildFly Swarm.  Wildfly Swarm offers an innovative approach to
+packaging and running Java EE applications by packaging them with just enough of
+the Java EE server runtime to be able to run them directly on the JVM using
+java -jar
 
+To easily launch this service, we will run an S2I build.  OpenShift S2I uses the
+supported OpenJDK container image to build the final container image of the
+Inventory service by uploading the WildFly Swam uber-jar from the target folder
+to the OpenShift platform.
+
+[source,bash,role=copypaste]
 ----
-oc new-app docker.io/siamaksade/mapit
+oc new-app redhat-openjdk18-openshift:1.2~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
+    --context-dir=inventory-wildfly-swarm \
+    --name=inventory
 ----
 
 The output will look like:
 
 ----
---> Found Docker image 9eca6ec (11 days old) from docker.io for "docker.io/siamaksade/mapit"
+--> Found image 56cfa0a (7 months old) in image stream "openshift/redhat-openjdk18-openshift" under tag "1.2" for "redhat-openjdk18-openshift:1.2"
 
-    * An image stream will be created as "mapit:latest" that will track this image
-    * This image will be deployed in deployment config "mapit"
-    * Ports 8080/tcp, 8778/tcp, 9779/tcp will be load balanced by service "mapit"
-      * Other containers can access this service through the hostname "mapit"
+    Java Applications
+    -----------------
+    Platform for building and running plain Java applications (fat-jar and flat classpath)
+
+    Tags: builder, java
+
+    * A source build using source code from https://github.com/openshift-labs/cloud-native-labs.git#ocp-3.10 will be created
+      * The resulting image will be pushed to image stream "inventory:latest"
+      * Use 'start-build' to trigger a new build
+    * This image will be deployed in deployment config "inventory"
+    * Ports 8080/tcp, 8443/tcp, 8778/tcp will be load balanced by service "inventory"
+      * Other containers can access this service through the hostname "inventory"
 
 --> Creating resources ...
-    imagestream "mapit" created
-    deploymentconfig "mapit" created
-    service "mapit" created
+    imagestream "inventory" created
+    buildconfig "inventory" created
+    deploymentconfig "inventory" created
+    service "inventory" created
 --> Success
+    Build scheduled, use 'oc logs -f bc/inventory' to track its progress.
     Application is not exposed. You can expose services to the outside world by executing one or more of the commands below:
-     'oc expose svc/mapit'
+     'oc expose svc/inventory'
     Run 'oc status' to view your app.
 ----
 
 You can see that OpenShift automatically created several resources as the output
-of this command. We will take some time to explore the resources that were
+of this command. As part of the deployment, OpenShift is running a build for us
+by fetching the source code from our github repository and running build scripts
+that are included in our S2I builder image.  This process will take a few minutes
+to complete.  You can monitor the status either through the Web UI or through
+the command line:
+
+[source,bash,role=copypaste]
+----
+oc logs -f bc/inventory
+----
+
+We will take some time to explore the resources that were
 created.
 
 For more information on the capabilities of `new-app`, take a look at its help
@@ -70,7 +104,7 @@ message by running `oc new-app -h`.
 #### Pods
 
 .OpenShift Pods
-image::openshift_pod.png[]
+image::images/openshift_pod.png[]
 
 Pods are one or more containers deployed together on host. A pod is the
 smallest compute unit you can define, deploy and manage. Each pod is allocated
@@ -82,6 +116,7 @@ pod definition while running.
 
 You can get a list of pods:
 
+[source,bash,role=copypaste]
 ----
 oc get pods
 ----
@@ -89,8 +124,8 @@ oc get pods
 And you will see something like the following:
 
 ----
-NAME            READY     STATUS    RESTARTS   AGE
-mapit-1-6lczv   1/1       Running   0          3m
+NAME                READY     STATUS    RESTARTS   AGE
+inventory-1-88p54   1/1       Running   0          13m
 ----
 
 NOTE: Pod names are dynamically generated as part of the deployment process,
@@ -101,45 +136,50 @@ In the case of the pod name above:
 
 [source,bash,role=copypaste]
 ----
-oc describe pod mapit-1-6lczv
+oc describe pod inventory-1-88p54
 ----
 
 And you will see output similar to the following:
 
 ----
-Name:                   mapit-1-6lczv
-Namespace:              app-management
-Security Policy:        restricted
-Node:                   node02.internal.aws.testdrive.openshift.com/10.0.3.32
-Start Time:             Thu, 17 Aug 2017 13:41:00 +0000
-Labels:                 app=mapit
-                        deployment=mapit-1
-                        deploymentconfig=mapit
-Status:                 Running
-IP:                     10.129.0.3
-Controllers:            ReplicationController/mapit-1
+Name:           inventory-1-88p54
+Namespace:      coolstore
+Node:           ip-10-0-0-50.ca-central-1.compute.internal/10.0.0.50
+Start Time:     Tue, 28 Aug 2018 19:38:08 -0400
+Labels:         app=inventory
+                deployment=inventory-1
+                deploymentconfig=inventory
+Annotations:    openshift.io/deployment-config.latest-version=1
+                openshift.io/deployment-config.name=inventory
+                openshift.io/deployment.name=inventory-1
+                openshift.io/generated-by=OpenShiftNewApp
+                openshift.io/scc=restricted
+Status:         Running
+IP:             10.1.5.87
+Controlled By:  ReplicationController/inventory-1
 Containers:
-  mapit:
-    Container ID:       docker://7eb42d5d95b38f7804e38f05cd423314cdb6bacb3e156c1d97e38eac1d9dc63f
-    Image:              docker.io/siamaksade/mapit@sha256:338a3031df6354e3adc3ba7d559ae22a0f2c79eade68aa72447f821cc7b8370c
-    Image ID:           docker-pullable://docker.io/siamaksade/mapit@sha256:338a3031df6354e3adc3ba7d559ae22a0f2c79eade68aa72447f821cc7b8370c
-    Ports:              8080/TCP, 8778/TCP, 9779/TCP
-    State:              Running
-      Started:          Thu, 17 Aug 2017 13:41:27 +0000
-    Ready:              True
-    Restart Count:      0
-    Volume Mounts:
-      /var/run/secrets/kubernetes.io/serviceaccount from default-token-kthcr (ro)
-    Environment Variables:      <none>
+  inventory:
+    Container ID:   docker://be1871d2a65d3a5d148c8643a2bb4428415a14f288a23f1eb1caa1f6e0cb2042
+    Image:          docker-registry.default.svc:5000/coolstore/inventory@sha256:07778ae03893fa34eeccf63d91d830cc171a50734cecf49e8e33dd6cefd545bb
+    Image ID:       docker-pullable://docker-registry.default.svc:5000/coolstore/inventory@sha256:07778ae03893fa34eeccf63d91d830cc171a50734cecf49e8e33dd6cefd545bb
+    Ports:          8080/TCP, 8443/TCP, 8778/TCP
+    Host Ports:     0/TCP, 0/TCP, 0/TCP
+    State:          Running
+      Started:      Tue, 28 Aug 2018 19:38:10 -0400
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-7qpj2 (ro)
 Conditions:
-  Type          Status
-  Initialized   True
-  Ready         True
-  PodScheduled  True
+  Type           Status
+  Initialized    True
+  Ready          True
+  PodScheduled   True
 Volumes:
-  default-token-kthcr:
-    Type:       Secret (a volume populated by a Secret)
-    SecretName: default-token-kthcr
+  default-token-7qpj2:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-7qpj2
 ...
 ----
 
@@ -149,12 +189,12 @@ and other information about what is going on.
 
 #### Services
 .OpenShift Service
-image::openshift_service.png[]
+image::images/openshift_service.png[]
 
 *Services* provide a convenient abstraction layer inside OpenShift to find a
 group of like *Pods*. They also act as an internal proxy/load balancer between
 those *Pods* and anything else that needs to access them from inside the
-OpenShift environment. For example, if you needed more `mapit` instances to
+OpenShift environment. For example, if you needed more `inventory` instances to
 handle the load, you could spin up more *Pods*. OpenShift automatically maps
 them as endpoints to the *Service*, and the incoming requests would not notice
 anything different except that the *Service* was now doing a better job handling
@@ -176,6 +216,7 @@ including the YAML format to make one by hand, in the official documentation.
 The `new-app` command used earlier caused a service to be created. You can see
 the current list of services in a project with:
 
+[source,bash,role=copypaste]
 ----
 oc get services
 ----
@@ -183,8 +224,8 @@ oc get services
 You will see something like the following:
 
 ----
-NAME      CLUSTER-IP     EXTERNAL-IP   PORT(S)                      AGE
-mapit     172.30.3.117   <none>        8080/TCP,8778/TCP,9779/TCP   14m
+NAME      CLUSTER-IP     EXTERNAL-IP     PORT(S)                      AGE
+inventory 172.30.87.247    <none>        8080/TCP,8443/TCP,8778/TCP   19m
 ----
 
 NOTE: Service IP addresses are dynamically assigned on creation and are
@@ -194,27 +235,32 @@ the service is deleted. Your service IP will likely be different.
 Just like with pods, you can `describe` services, too. In fact, you can
 `describe` most objects in OpenShift:
 
+[source,bash,role=copypaste]
 ----
-oc describe service mapit
+oc describe service inventory
 ----
 
 You will see something like the following:
 
 ----
-Name:                   mapit
-Namespace:              app-management
-Labels:                 app=mapit
-Selector:               app=mapit,deploymentconfig=mapit
-Type:                   ClusterIP
-IP:                     172.30.3.117
-Port:                   8080-tcp        8080/TCP
-Endpoints:              10.129.0.3:8080
-Port:                   8778-tcp        8778/TCP
-Endpoints:              10.129.0.3:8778
-Port:                   9779-tcp        9779/TCP
-Endpoints:              10.129.0.3:9779
-Session Affinity:       None
-No events.
+Name:              inventory
+Namespace:         coolstore
+Labels:            app=inventory
+Annotations:       openshift.io/generated-by=OpenShiftNewApp
+Selector:          app=inventory,deploymentconfig=inventory
+Type:              ClusterIP
+IP:                172.30.87.247
+Port:              8080-tcp  8080/TCP
+TargetPort:        8080/TCP
+Endpoints:         10.1.5.87:8080
+Port:              8443-tcp  8443/TCP
+TargetPort:        8443/TCP
+Endpoints:         10.1.5.87:8443
+Port:              8778-tcp  8778/TCP
+TargetPort:        8778/TCP
+Endpoints:         10.1.5.87:8778
+Session Affinity:  None
+Events:            <none>
 ----
 
 Information about all objects (their definition, their state, and so forth) is
@@ -223,8 +269,9 @@ this data can be represented as serializable data objects (JSON, YAML).
 
 Take a look at the YAML output for the service:
 
+[source,bash,role=copypaste]
 ----
-oc get service mapit -o yaml
+oc get service inventory -o yaml
 ----
 
 You will see something like the following:
@@ -235,32 +282,32 @@ kind: Service
 metadata:
   annotations:
     openshift.io/generated-by: OpenShiftNewApp
-  creationTimestamp: 2017-08-17T13:40:51Z
+  creationTimestamp: 2018-08-28T23:34:21Z
   labels:
-    app: mapit
-  name: mapit
-  namespace: app-management
-  resourceVersion: "1492"
-  selfLink: /api/v1/namespaces/app-management/services/mapit
-  uid: af2cb9cd-8351-11e7-afdc-0a128c2d4cfe
+    app: inventory
+  name: inventory
+  namespace: coolstore
+  resourceVersion: "14790494"
+  selfLink: /api/v1/namespaces/coolstore/services/inventory
+  uid: e39c2e05-ab1a-11e8-9d47-021570a77a16
 spec:
-  clusterIP: 172.30.3.117
+  clusterIP: 172.30.87.247
   ports:
   - name: 8080-tcp
     port: 8080
     protocol: TCP
     targetPort: 8080
+  - name: 8443-tcp
+    port: 8443
+    protocol: TCP
+    targetPort: 8443
   - name: 8778-tcp
     port: 8778
     protocol: TCP
     targetPort: 8778
-  - name: 9779-tcp
-    port: 9779
-    protocol: TCP
-    targetPort: 9779
   selector:
-    app: mapit
-    deploymentconfig: mapit
+    app: inventory
+    deploymentconfig: inventory
   sessionAffinity: None
   type: ClusterIP
 status:
@@ -270,35 +317,35 @@ status:
 Take note of the `selector` stanza. Remember it.
 
 It is also of interest to view the YAML of the *Pod* to understand how OpenShift
-wires components together. Go back and find the name of your `mapit` *Pod*, and
-then execute the following:
+wires components together. Go back and find the name of your `inventory` *Pod*,
+and then execute the following:
 
 [source,bash,role=copypaste]
 ----
-oc get pod mapit-1-6lczv -o yaml
+oc get pod inventory-1-88p54 -o yaml
 ----
 
 Under the `metadata` section you should see the following:
 
 ----
   labels:
-    app: mapit
-    deployment: mapit-1
-    deploymentconfig: mapit
-  name: mapit-1-6lczv
+    app: inventory
+    deployment: inventory-1
+    deploymentconfig: inventory
+  name: inventory-1-88p54
 ----
 
-* The *Service* has `selector` stanza that refers to `app: mapit` and
-  `deploymentconfig: mapit`.
+* The *Service* has `selector` stanza that refers to `app: inventory` and
+  `deploymentconfig: inventory`.
 * The *Pod* has multiple *Labels*:
-** `deploymentconfig: mapit`
-** `app: mapit`
-** `deployment: mapit-1`
+** `deploymentconfig: inventory`
+** `app: inventory`
+** `deployment: inventory-1`
 
 *Labels* are just key/value pairs. Any *Pod* in this *Project* that has a *Label* that
 matches the *Selector* will be associated with the *Service*. If you look at the
 `describe` output again, you will see that there is one endpoint for the
-service: the existing `mapit` *Pod*.
+service: the existing `inventory` *Pod*.
 
 The default behavior of `new-app` is to create just one instance of the item
 requested. We will see how to modify/adjust this in a moment, but there are a
@@ -339,8 +386,9 @@ exercises.
 Now that we know the background of what a *ReplicatonController* and
 *DeploymentConfig* are, we can explore how they work and are related. Take a
 look at the *DeploymentConfig* (DC) that was created for you when you told
-OpenShift to stand up the `mapit` image:
+OpenShift to stand up the `inventory` service:
 
+[source,bash,role=copypaste]
 ----
 oc get dc
 ----
@@ -348,15 +396,16 @@ oc get dc
 You will see something like the following:
 
 ----
-NAME      REVISION   DESIRED   CURRENT   TRIGGERED BY
-mapit     1          1         1         config,image(mapit:latest)
+NAME          REVISION   DESIRED   CURRENT   TRIGGERED BY
+inventory     1          1         1         config,image(inventory:latest)
 ----
 
 To get more details, we can look into the *ReplicationController* (*RC*).
 
 Take a look at the *ReplicationController* (RC) that was created for you when
-you told OpenShift to stand up the `mapit` image:
+you told OpenShift to stand up the `inventory` service:
 
+[source,bash,role=copypaste]
 ----
 oc get rc
 ----
@@ -364,98 +413,15 @@ oc get rc
 You will see something like the following:
 
 ----
-NAME      DESIRED   CURRENT   READY     AGE
-mapit-1   1         1         1         4h
+NAME          DESIRED   CURRENT   READY     AGE
+inventory-1   1         1         1         4h
 ----
 
 This lets us know that, right now, we expect one *Pod* to be deployed
 (`Desired`), and we have one *Pod* actually deployed (`Current`). By changing
 the desired number, we can tell OpenShift that we want more or less *Pods*.
 
-#### Scaling the Application
-
-Let's scale our mapit "application" up to 2 instances. We can do this with
-the `scale` command.
-
-----
-oc scale --replicas=2 dc/mapit
-----
-
-To verify that we changed the number of replicas, issue the following command:
-
-----
-oc get rc
-----
-
-You will see something like the following:
-
-----
-NAME         DESIRED   CURRENT   READY     AGE
-mapit-1      2         2         1         4h
-----
-
-You can see that we now have 2 replicas. Let's verify the number of pods with
-the `oc get pods` command:
-
-----
-oc get pods
-----
-
-You will see something like the following:
-
-----
-NAME            READY     STATUS    RESTARTS   AGE
-mapit-1-6lczv   1/1       Running   0          4h
-mapit-1-rq6t6   1/1       Running   0          1m
-----
-
-And lastly, let's verify that the *Service* that we learned about in the
-previous lab accurately reflects two endpoints:
-
-----
-oc describe svc mapit
-----
-
-You will see something like the following:
-
-----
-Name:                   mapit
-Namespace:              app-management
-Labels:                 app=mapit
-Selector:               app=mapit,deploymentconfig=mapit
-Type:                   ClusterIP
-IP:                     172.30.3.117
-Port:                   8080-tcp        8080/TCP
-Endpoints:              10.128.2.3:8080,10.129.0.3:8080
-Port:                   8778-tcp        8778/TCP
-Endpoints:              10.128.2.3:8778,10.129.0.3:8778
-Port:                   9779-tcp        9779/TCP
-Endpoints:              10.128.2.3:9779,10.129.0.3:9779
-Session Affinity:       None
-No events.
-----
-
-Another way to look at a *Service*'s endpoints is with the following:
-
-----
-oc get endpoints mapit
-----
-
-And you will see something like the following:
-
-----
-NAME      ENDPOINTS                                                     AGE
-mapit     10.128.2.3:9779,10.129.0.3:9779,10.128.2.3:8080 + 3 more...   4h
-----
-
-Your IP addresses will likely be different, as each pod receives a unique IP
-within the OpenShift environment. The endpoint list is a quick way to see how
-many pods are behind a service.
-
-Overall, that's how simple it is to scale an application (*Pods* in a
-*Service*). Application scaling can happen extremely quickly because OpenShift
-is just launching new instances of an existing image, especially if that image
-is already cached on the node.
+In a future lab, we'll explore how replication controllers help us scale our applications.
 
 One last thing to note is that there are actually several ports defined on this
 *Service*. Earlier we said that a pod gets a single IP and has control of the
@@ -467,45 +433,58 @@ different places.
 For example, a *Service* could listen on port 80 (for legacy reasons) but the
 *Pod* could be listening on port 8080, 8888, or anything else.
 
-In this `mapit` case, the image we ran has several `EXPOSE` statements in the
-`Dockerfile`, so OpenShift automatically created ports on the service and mapped
-them into the *Pods*.
+### Deploy Remaining Microservices
 
-#### Application "Self Healing"
+Let's go ahead and deploy the rest of our microservices.  We're going to deploy
+the remaining services: Catalog, Gateway, and Web UI.
 
-Because OpenShift's *RCs* are constantly monitoring to see that the desired number
-of *Pods* actually is running, you might also expect that OpenShift will "fix" the
-situation if it is ever not right. You would be correct!
-
-Since we have two *Pods* running right now, let's see what happens if we
-"accidentally" kill one. Run the `oc get pods` command again, and choose a *Pod*
-name. Then, do the following:
+The Catalog service is a spring boot application.  We will, once again, use the
+Open JDK S2I image.
 
 [source,bash,role=copypaste]
 ----
-oc delete pod mapit-1-6lczv && oc get pods
+oc new-app redhat-openjdk18-openshift:1.2~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
+  --context-dir=catalog-spring-boot \
+  --name=catalog
 ----
 
-And you will see something like the following:
+The Gateway service is an Eclipse Vert.x application which will also use the
+Open JDK S2I image.  Vert.x service discovery integrates into OpenShift service
+discovery via OpenShift REST API and imports available services to make them
+available to the Vert.x application.  Every pod in OpenShift runs using a
+service account.  By default, all pods use the `default` service account.  In
+order for the `gateway` service to use OpenShift's service discovery, we need to
+grant the `default` service account the `view` role in this project:
 
+[source,bash,role=copypaste]
 ----
-pod "mapit-1-6lczv" deleted
-NAME            READY     STATUS              RESTARTS   AGE
-mapit-1-6lczv   1/1       Terminating         0          4h
-mapit-1-qtdks   0/1       ContainerCreating   0          0s
-mapit-1-rq6t6   1/1       Running             0          6m
+oc policy add-role-to-user view -z default
 ----
 
-Did you notice anything? There is a container being terminated (the one we deleted),
-and there's a new container already being created.
+[source,bash,role=copypaste]
+----
+oc new-app redhat-openjdk18-openshift:1.2~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
+  --context-dir=gateway-vertx \
+  --name=gateway
+----
 
-Also, the names of the *Pods* are slightly changed.  That's because OpenShift
-almost immediately detected that the current state (1 *Pod*) didn't match the
-desired state (2 *Pods*), and it fixed it by scheduling another *Pod*.
+
+Lastly, we need to deploy our Web UI which will use the node.js S2I builder image.
+
+[source,bash,role=copypaste]
+----
+oc new-app nodejs:8~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
+  --context-dir=web-nodejs \
+  --name=web
+----
+
+Lets use the OpenShift Web Console to monitor the rest of our deployments:
+
+*link:{{ WEB_CONSOLE_URL }}/project/coolstore/overview[]*
 
 ### Background: Routes
 .OpenShift Route
-image::openshift_route.png[]
+image::images/openshift_route.png[]
 
 While *Services* provide internal abstraction and load balancing within an
 OpenShift environment, sometimes clients (users, systems, devices, etc.)
@@ -523,28 +502,31 @@ Do you remember setting up the router? You probably don't. That's because the
 installer settings created a router for you! The router lives in the `default`
 *Project*, and you can see information about it with the following command:
 
+[source,bash,role=copypaste]
 ----
 oc describe dc router -n default
 ----
 
 #### Creating a Route
 Creating a *Route* is a pretty straight-forward process.  You simply `expose`
-the *Service* via the command line. If you remember from earlier, your *Service*
-name is `mapit`. With the *Service* name, creating a *Route* is a simple
+the *Service* via the command line. The name for your web frontend *Service*
+is `web`. With the *Service* name, creating a *Route* is a simple
 one-command task:
 
+[source,bash,role=copypaste]
 ----
-oc expose service mapit
+oc expose service web
 ----
 
 You will see:
 
 ----
-route "mapit" exposed
+route "web" exposed
 ----
 
 Verify the *Route* was created with the following command:
 
+[source,bash,role=copypaste]
 ----
 oc get route
 ----
@@ -553,7 +535,7 @@ You will see something like:
 
 ----
 NAME      HOST/PORT                                                            PATH      SERVICES   PORT       TERMINATION   WILDCARD
-mapit     mapit-app-management.{{OCP_ROUTING_SUFFIX}}             mapit      8080-tcp                 None
+web     web-coolstore.{{OCP_ROUTING_SUFFIX}}             web      8080-tcp                 None
 ----
 
 If you take a look at the `HOST/PORT` column, you'll see a familiar looking
@@ -582,245 +564,47 @@ The *Route* is associated with the *Service*, and the router automatically
 proxies connections directly to the *Pod*. The router itself runs as a *Pod*. It
 bridges the "real" internet to the SDN.
 
-If you take a step back to examine everything you've done so far, in three
-commands you deployed an application, scaled it, and made it accessible to the
-outside world:
+As a last step, we also want to expose the service for our API Gateway:
 
+[source,bash,role=copypaste]
 ----
-oc new-app docker.io/siamaksade/mapit
-oc scale --replicas=2 dc/mapit
-oc expose service mapit
+oc expose service gateway
 ----
 
-#### Scale Down
-Before we continue, go ahead and scale your application down to a single
-instance:
+At this point our application should be deployed and accessible through the
+Web UI Route:
+
+*link:http://web-coolstore.{{OCP_ROUTING_SUFFIX}}[]*
+
+If you take a step back to examine everything you've done so far, in just a few
+commands, you deployed an application composed of several microservices and made
+it accessible to the outside world, all without writing a single Dockerfile.
 
 ----
-oc scale --replicas=1 dc/mapit
+# Create Project
+oc new-project coolstore
+
+# Setup Permissions
+oc policy add-role-to-user view -z default
+
+# Deploy Services
+oc new-app redhat-openjdk18-openshift:1.2~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
+    --context-dir=inventory-wildfly-swarm \
+    --name=inventory
+
+oc new-app redhat-openjdk18-openshift:1.2~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
+  --context-dir=catalog-spring-boot \
+  --name=catalog
+
+oc new-app redhat-openjdk18-openshift:1.2~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
+  --context-dir=gateway-vertx \
+  --name=gateway
+
+oc new-app nodejs:8~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
+  --context-dir=web-nodejs \
+  --name=web
+
+# Expose Services
+oc expose service inventory
+oc expose service gateway
 ----
-
-### Application Probes
-OpenShift provides rudimentary capabilities around checking the liveness and/or
-readiness of application instances. If the basic checks are insufficient,
-OpenShift also allows you to run a command inside the *Pod*/container in order
-to perform the check. That command could be a complicated script that uses any
-language already installed inside the container image.
-
-There are two types of application probes that can be defined:
-
-*Liveness Probe*
-
-A liveness probe checks if the container in which it is configured is still
-running. If the liveness probe fails, the container is killed, which will be
-subjected to its restart policy.
-
-*Readiness Probe*
-
-A readiness probe determines if a container is ready to service requests. If the
-readiness probe fails, the endpoint's controller ensures the container has its IP
-address removed from the endpoints of all services that should match it. A
-readiness probe can be used to signal to the endpoint's controller that even
-though a container is running, it should not receive any traffic.
-
-More information on probing applications is available in the
-https://docs.openshift.com/container-platform/latest/dev_guide/application_health.html[Application
-Health] section of the documentation.
-
-#### Add Probes to the Application
-The `oc set` command can be used to perform several different functions, one of
-which is creating and/or modifying probes. The `mapit` application exposes an
-endpoint which we can check to see if it is alive and ready to respond. You can
-test it using `curl`:
-
-----
-curl mapit-app-management.{{OCP_ROUTING_SUFFIX}}/health
-----
-
-You will get some JSON as a response:
-
-[source,json]
-----
-{"status":"UP","diskSpace":{"status":"UP","total":10724835328,"free":10257825792,"threshold":10485760}}
-----
-
-We can ask OpenShift to probe this endpoint for liveness with the following
-command:
-
-----
-oc set probe dc/mapit --liveness --get-url=http://:8080/health --initial-delay-seconds=30
-----
-
-You can then see that this probe is defined in the `oc describe` output:
-
-----
-oc describe dc mapit
-----
-
-You will see a section like:
-
-----
-...
- Containers:
-   mapit:
-    Image:                      docker.io/siamaksade/mapit@sha256:338a3031df6354e3adc3ba7d559ae22a0f2c79eade68aa72447f821cc7b8370c
-    Ports:                      8080/TCP, 8778/TCP, 9779/TCP
-    Liveness:                   http-get http://:8080/health delay=30s timeout=1s period=10s #success=1 #failure=3
-    Volume Mounts:              <none>
-    Environment Variables:      <none>
-  No volumes.
-...
-----
-
-Similarly, you can set a readiness probe in the same manner:
-
-----
-oc set probe dc/mapit --readiness --get-url=http://:8080/health --initial-delay-seconds=30
-----
-
-### Add Storage to the Application
-
-The `mapit` application currently doesn't leverage any persistent storage. If the pod dies, so does all the content inside the container.
-
-[NOTE]
-====
-The directories that make up the containers internal filesystem are a blend of the read-only layers of the container image and the top-most writable layer that is added as soon as a container instance is started from the image.
-The writable layer is disposed of once the container is deleted which happens regularly in a container orchestration environment.
-====
-
-If a pod in OpenShift needs reliable storage, for example to host a database, we would need to supply a **persistent** volume to the pod. This type of storage outlives the container, i.e. it persists when the pod dies. It typically comes from an external storage system.
-
-We will talk about this concept in more detail later. But let's imagine for a moment, the `mapit` application needs persistent storage available under the `/app-storage` directory inside the container.
-
-Here's how you would instruct OpenShift to create a *PersistentVolume* object, which represents external, persistent storage, and have it *mounted* inside the container's filesystem:
-
-----
-oc volume dc/mapit --add --name=mapit-storage -t pvc --claim-mode=ReadWriteMany --claim-size=1Gi --claim-name=mapit-storage --mount-path=/app-storage
-----
-
-The output looks like this:
-
-----
-persistentvolumeclaims/mapit-storage
-deploymentconfig "mapit" updated
-----
-
-In the first step a *PersistentVolumeClaim* was created. This object represents a request for storage of a certain kind, with a certain capacity from the user to OpenShift.
-Next the `DeploymentConfig` of `mapit` is updated to reference this storage and make it available under the `/app-storage` directory inside the pod.
-
-You can see the new `DeploymentConfig` like this:
-
-----
-oc get dc mapit
-----
-
-The output will show that a new revision was created as part of the update with storage.
-
-----
-NAME      REVISION   DESIRED   CURRENT   TRIGGERED BY
-mapit     4          1         1         config,image(mapit:latest)
-----
-
-Likely, depending when you ran the command you may or may not see that the new pod is still being spawned:
-
-----
-oc get pod
-----
-
-----
-NAME             READY     STATUS              RESTARTS   AGE
-mapit-3-ntd9w    1/1       Running             0          9m
-mapit-4-d872b    0/1       ContainerCreating   0          5s
-mapit-4-deploy   1/1       Running             0          10s
-----
-
-We will look at how this storage was provisioned automatically in the background using _Red Hat Container-native Storage_ later. You will also learn how to request storage as part of a template.
-
-Suffice it to say, a 1GiB GlusterFS volume has been created and made available to the pod.
-
-Log on to the new pod (**your pod names will be different**) using the remote-shell capability of the `oc` client:
-
-[source,none,role=copypaste]
-----
-oc rsh mapit-4-d872b
-----
-
-*Being in the container's shell session*, list the content of the root directory from the perspective of the container's namespace:
-
-----
-ls -ahl /
-----
-
-You will see an additional directory there under `/app-storage`
-
-----
-total 36K
-drwxr-xr-x.  19 root  root 4.0K Apr  9 11:00 .
-drwxr-xr-x.  19 root  root 4.0K Apr  9 11:00 ..
--rwxr-xr-x.   1 root  root    0 Apr  9 11:00 .dockerenv
--rw-r--r--.   1 root  root  16K Dec 14  2016 anaconda-post.log
-drwxrwsr-x.   4 root  2000 4.0K Apr  9 11:05 app-storage <1>
-lrwxrwxrwx.   1 root  root    7 Dec 14  2016 bin -> usr/bin
-drwxrwxrwx.   2 jboss root  137 Aug  4  2017 deployments
-drwxr-xr-x.   5 root  root  360 Apr  9 11:00 dev
-drwxr-xr-x.  52 root  root 4.0K Apr  9 11:00 etc
-drwxr-xr-x.   2 root  root    6 Nov  5  2016 home
-lrwxrwxrwx.   1 root  root    7 Dec 14  2016 lib -> usr/lib
-lrwxrwxrwx.   1 root  root    9 Dec 14  2016 lib64 -> usr/lib64
-drwx------.   2 root  root    6 Dec 14  2016 lost+found
-drwxr-xr-x.   2 root  root    6 Nov  5  2016 media
-drwxr-xr-x.   2 root  root    6 Nov  5  2016 mnt
-drwxr-xr-x.   4 root  root   61 Jan 18  2017 opt
-dr-xr-xr-x. 299 root  root    0 Apr  9 11:00 proc
-dr-xr-x---.   2 root  root  114 Dec 14  2016 root
-drwxr-xr-x.  11 root  root  145 Apr  9 11:00 run
-lrwxrwxrwx.   1 root  root    8 Dec 14  2016 sbin -> usr/sbin
-drwxr-xr-x.   2 root  root    6 Nov  5  2016 srv
-dr-xr-xr-x.  13 root  root    0 Apr  9 09:14 sys
-drwxrwxrwt.  10 root  root  241 Apr  9 11:00 tmp
-drwxr-xr-x.  13 root  root  155 Dec 16  2016 usr
-drwxr-xr-x.  18 root  root  238 Dec 14  2016 var
-----
-<1> This is where the persistent storage appears inside the container
-
-One of the interesting aspects of persistent storage from GlusterFS is that it is actually "shared" as indicated by the claim mode **ReadWriteMany**. This means that multiple containers can read and write to the same storage location concurrently.
-
-Let's try this. First write a file to the persistent, shared storage and then exit the remote shell session.
-
-----
-echo "Hello World from OpenShift" > /app-storage/hello.txt
-exit
-----
-
-Now, let's scale your deployment to two pods:
-
-----
-oc scale --replicas=2 dc/mapit
-----
-
-After some time, ensure both are in the `Running` state:
-
-----
-oc get pods
-----
-
-----
-NAME            READY     STATUS    RESTARTS   AGE
-mapit-4-ljjmf   1/1       Running   0          24m
-mapit-4-d872b   1/1       Running   0          25m
-----
-
-Read the text file from the other pod using the `cat` command appended directly to the `oc rsh` call:
-
-[source,none,role=copypaste]
-----
-oc rsh mapit-4-ljjmf cat /app-storage/hello.txt
-----
-
-You should see the content of the file from **the other pod**:
-
-----
-Hello World from OpenShift
-----
-
-This illustrates how to provide persistent storage, that is independent from the pod lifecycle and can optionally be shared by multiple pods at the same time.
