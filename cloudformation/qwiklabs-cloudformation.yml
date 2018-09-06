@@ -66,7 +66,7 @@ Parameters:
 
   QwiklabId:
     Type: String
-    Default: openshift,production
+    Default: na-se, combined-workshop
     ConstraintDescription: Must be the name of a branch in the GitHub repository we are using in various cloud-init modules.
 
 Mappings:
@@ -849,7 +849,7 @@ Resources:
               - ansible localhost -m wait_for -a "port=22 host=${IdmNode1.PrivateIp}"
               - ansible-playbook /opt/lab/helpers/fetch_idm_cert.yml
               - mkdir -p /var/lib/etcd
-              - git clone -b ${RepoBranch} https://github.com/${RepoAccount}/openshift-cns-testdrive.git /opt/lab/code
+              - git clone -b ${RepoBranch} https://github.com/${RepoAccount}/na-se-openshift-workshop.git /opt/lab/code
               - chown -R cloud-user:cloud-user /opt/lab
               - cp /opt/lab/code/support/* /opt/lab/support/
               - chown -R cloud-user:cloud-user /opt/lab
@@ -1097,7 +1097,7 @@ Resources:
 
               mounts:
               - [ /dev/xvdd, /var/lib/etcd, xfs, "defaults" ]
-            - { RepoAccount: !Select [0, !Split [",", !Ref QwiklabId]], RepoBranch: !Select [1, !Split [",", !Ref QwiklabId]] }
+            - { RepoAccount: na-se, RepoBranch: combined-workshop }
 
   InfraNode1NetworkInterface:
     Type: AWS::EC2::NetworkInterface
@@ -1262,8 +1262,8 @@ Resources:
 
               write_files:
               - content: |
-                  WORKSHOPS_URLS="https://raw.githubusercontent.com/${RepoAccount}/openshift-cns-testdrive/${RepoBranch}/labguide/_ocp_admin_testdrive.yaml"
-                  CONTENT_URL_PREFIX="https://raw.githubusercontent.com/${RepoAccount}/openshift-cns-testdrive/${RepoBranch}/labguide"
+                  WORKSHOPS_URLS="https://raw.githubusercontent.com/${RepoAccount}/na-se-openshift-workshop/${RepoBranch}/labguide/_ocp_admin_testdrive.yaml"
+                  CONTENT_URL_PREFIX="https://raw.githubusercontent.com/${RepoAccount}/na-se-openshift-workshop/${RepoBranch}/labguide"
                   KEYNAME="${KeyName}"
                   OCP_ROUTING_SUFFIX="apps.${AWS::AccountId}.${PublicHostedZone}"
                   MASTER_HOSTNAME="master"
@@ -1335,7 +1335,7 @@ Resources:
               - "ansible-playbook /opt/lab/support/pv-resize-post-deploy-config.yml ; /usr/local/bin/cfn-signal.sh $? '${PostDeployWaitHandle}'"
               - ansible master.internal.aws.testdrive.openshift.com, -m raw -a "oc get is ruby -n openshift -o json | jq '(.spec.tags[] | select(.name == \"2.3\").from.name) = \"support.internal.aws.testdrive.openshift.com:5000/rhscl/ruby-23-rhel7:latest\"' | jq '(.spec.tags[] | select(.name == \"2.3\").importPolicy.insecure) = true' | oc replace -f -"
               - ansible master.internal.aws.testdrive.openshift.com, -m raw -a "oc get is postgresql -n openshift -o json | jq '(.spec.tags[] | select(.name == \"9.5\").from.name) = \"support.internal.aws.testdrive.openshift.com:5000/rhscl/postgresql-95-rhel7:latest\"' | jq '(.spec.tags[] | select(.name == \"9.5\").importPolicy.insecure) = true' | oc replace -f -"
-            - { RepoAccount: !Select [0, !Split [",", !Ref QwiklabId]], RepoBranch: !Select [1, !Split [",", !Ref QwiklabId]] }
+            - { RepoAccount: na-se, RepoBranch: combined-workshop }
 
   WorkerNode1NetworkInterface:
     Type: AWS::EC2::NetworkInterface
