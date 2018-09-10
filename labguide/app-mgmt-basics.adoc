@@ -40,7 +40,7 @@ them, and users may be able to access multiple *Projects*.
 
 For this exercise, first create a *Project* to hold our resources:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc new-project coolstore
 ----
@@ -63,7 +63,7 @@ supported OpenJDK container image to build the final container image of the
 Inventory service by uploading the WildFly Swam uber-jar from the target folder
 to the OpenShift platform.
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc new-app redhat-openjdk18-openshift:1.2~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
     --context-dir=inventory-wildfly-swarm \
@@ -107,7 +107,7 @@ that are included in our S2I builder image.  This process will take a few minute
 to complete.  You can monitor the status either through the Web UI or through
 the command line:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc logs -f bc/inventory
 ----
@@ -133,7 +133,7 @@ pod definition while running.
 
 You can get a list of pods:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc get pods
 ----
@@ -151,7 +151,7 @@ which you will learn about shortly. Your name will be slightly different.
 The `describe` command will give you more information on the details of a pod.
 In the case of the pod name above:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc describe pod inventory-1-88p54
 ----
@@ -233,7 +233,7 @@ including the YAML format to make one by hand, in the official documentation.
 The `new-app` command used earlier caused a service to be created. You can see
 the current list of services in a project with:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc get services
 ----
@@ -252,7 +252,7 @@ the service is deleted. Your service IP will likely be different.
 Just like with pods, you can `describe` services, too. In fact, you can
 `describe` most objects in OpenShift:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc describe service inventory
 ----
@@ -286,7 +286,7 @@ this data can be represented as serializable data objects (JSON, YAML).
 
 Take a look at the YAML output for the service:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc get service inventory -o yaml
 ----
@@ -337,7 +337,7 @@ It is also of interest to view the YAML of the *Pod* to understand how OpenShift
 wires components together. Go back and find the name of your `inventory` *Pod*,
 and then execute the following:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc get pod inventory-1-88p54 -o yaml
 ----
@@ -405,7 +405,7 @@ Now that we know the background of what a *ReplicatonController* and
 look at the *DeploymentConfig* (DC) that was created for you when you told
 OpenShift to stand up the `inventory` service:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc get dc
 ----
@@ -422,7 +422,7 @@ To get more details, we can look into the *ReplicationController* (*RC*).
 Take a look at the *ReplicationController* (RC) that was created for you when
 you told OpenShift to stand up the `inventory` service:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc get rc
 ----
@@ -458,7 +458,7 @@ the remaining services: Catalog, Gateway, and Web UI.
 The Catalog service is a spring boot application.  We will, once again, use the
 Open JDK S2I image.
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc new-app redhat-openjdk18-openshift:1.2~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
   --context-dir=catalog-spring-boot \
@@ -473,12 +473,12 @@ service account.  By default, all pods use the `default` service account.  In
 order for the `gateway` service to use OpenShift's service discovery, we need to
 grant the `default` service account the `view` role in this project:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc policy add-role-to-user view -z default
 ----
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc new-app redhat-openjdk18-openshift:1.2~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
   --context-dir=gateway-vertx \
@@ -488,7 +488,7 @@ oc new-app redhat-openjdk18-openshift:1.2~https://github.com/cricci82/cloud-nati
 
 Lastly, we need to deploy our Web UI which will use the node.js S2I builder image.
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc new-app nodejs:8~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
   --context-dir=web-nodejs \
@@ -519,7 +519,7 @@ Do you remember setting up the router? You probably don't. That's because the
 installer settings created a router for you! The router lives in the `default`
 *Project*, and you can see information about it with the following command:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc describe dc router -n default
 ----
@@ -530,7 +530,7 @@ the *Service* via the command line. The name for your web frontend *Service*
 is `web`. With the *Service* name, creating a *Route* is a simple
 one-command task:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc expose service web
 ----
@@ -543,7 +543,7 @@ route "web" exposed
 
 Verify the *Route* was created with the following command:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc get route
 ----
@@ -583,7 +583,7 @@ bridges the "real" internet to the SDN.
 
 As a last step, we also want to expose the service for our API Gateway:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc expose service gateway
 ----

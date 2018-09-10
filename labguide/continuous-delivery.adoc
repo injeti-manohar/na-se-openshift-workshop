@@ -113,6 +113,40 @@ the GitHub repository as the remote repository for your working copy.
 
 NOTE: Replace `GIT-REPO-URL` with the Git repository url copied in the previous steps
 
+NOTE: You can choose any directory, these instructions use `$HOME` as an example.
+
+In order to get started, you need to download the project source code.
+
+[source]
+----
+$ curl -skL -o projects.zip https://github.com/cricci82/cloud-native-labs/archive/ocp-3.10.zip
+----
+
+Unzip the `projects.zip` file in your home directory.
+
+You can use archiving utility with `zip` format support you have available on your machine.
+
+* Windows: `Expand-Archive -Path .\projects.zip ; Move-Item .\projects\cloud-native-labs-master\* .`
+* Linux: `unzip projects.zip && mv cloud-native-labs-master/* .`
+* Mac: `tar xvfz projects.zip --strip-components 1`
+
+After unzipping the projects, you should see these folders.
+
+[source]
+----
+$ ls -l
+
+-rwxr-xr-x  1 user  wheel  1718 Aug 14 14:50 README.md
+drwxr-xr-x  6 user  wheel   204 Aug 14 14:50 catalog-spring-boot
+drwxr-xr-x  6 user  wheel   204 Aug 14 14:50 gateway-vertx
+drwxr-xr-x  6 user  wheel   204 Aug 14 14:50 inventory-wildfly-swarm
+drwxr-xr-x  9 user  wheel   306 Aug 14 14:50 solutions
+drwxr-xr-x  8 user  wheel   272 Aug 14 14:50 web-nodejs
+----
+
+Next, we'll initialize the local git repository and push it to your new remote
+repository
+
 [source]
 ----
 $ cd inventory-wildfly-swarm
