@@ -756,7 +756,7 @@ Resources:
     DependsOn: SupportNode
     Properties:
       Handle: !Ref OpenShiftWaitHandle
-      Timeout: '1800'
+      Timeout: '2400'
 
   PostDeployWaitHandle:
     Type: AWS::CloudFormation::WaitConditionHandle
@@ -766,7 +766,7 @@ Resources:
     DependsOn: SupportNode
     Properties:
       Handle: !Ref PostDeployWaitHandle
-      Timeout: '1800'
+      Timeout: '2400'
 
   Master1NetworkInterface:
     Type: AWS::EC2::NetworkInterface
