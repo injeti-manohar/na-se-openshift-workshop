@@ -54,16 +54,16 @@ sub-project of Spring Boot which adds health and management HTTP endpoints to th
 Actuator is done via adding `org.springframework.boot:spring-boot-starter-actuator` dependency to the Maven project
 dependencies which is already done for the Catalog services.
 
-Verify that the health endpoint works for the Catalog service using `curl`, replacing `{{CATALOG_ROUTE_HOST}}`
+Verify that the health endpoint works for the Catalog service using `curl`, replacing `CATALOG_ROUTE_HOST`
 with the Catalog route url:
 
 NOTE: Remember how to find out the route urls? Try `oc get route catalog`
 
-[source]
+[source, bash]
 ----
-$ curl http://{{CATALOG_ROUTE_HOST}}/health
+curl http://CATALOG_ROUTE_HOST/health
 
-{"status":"UP","diskSpace":{"status":"UP","total":3209691136,"free":2667175936,"threshold":10485760},"db":{"status":"UP","database":"H2","hello":1}}
+{"status":"UP"}
 ----
 
 https://wildfly-swarm.gitbooks.io/wildfly-swarm-users-guide/content/advanced/monitoring.html[WildFly Swarm health endpoints] function in a similar fashion and are enabled by adding `org.wildfly.swarm:monitor`
@@ -75,9 +75,9 @@ with the Inventory route url:
 
 NOTE: You know this by know! Use `oc get route inventory` to get the Inventory route url
 
-[source]
+[source, bash]
 ----
-$ curl http://{{INVENTORY_ROUTE_HOST}}/node
+curl http://{{INVENTORY_ROUTE_HOST}}/node
 
 {
     "name" : "localhost",
@@ -97,9 +97,9 @@ with the API Gateway route url::
 
 NOTE: Yup! You can use `oc get route gateway` to get the API Gateway route url
 
-[source]
+[source, bash]
 ----
-$ curl http://{{API_GATEWAY_ROUTE_HOST}}/health
+curl http://{{API_GATEWAY_ROUTE_HOST}}/health
 
 {"status":"UP"}
 ----
@@ -115,7 +115,7 @@ Console or OpenShift CLI. You will try both in this lab.
 Like mentioned, health probes are defined on a deployment config for each pod. Review the available
 deployment configs in the project.
 
-[source]
+[source, bash]
 ----
 oc get dc
 
@@ -130,7 +130,7 @@ NOTE: `dc` stands for deployment config
 
 Add a liveness probe on the catalog deployment config using `oc set probe`:
 
-[source]
+[source, bash]
 ----
 oc set probe dc/catalog --liveness --initial-delay-seconds=30 --failure-threshold=3 --get-url=http://:8080/health
 ----
@@ -165,7 +165,7 @@ to restart the container and when to leave it alone and remove it from the load-
 would  manually investigate the issue.
 ====
 
-[source]
+[source, bash]
 ----
 oc set probe dc/catalog --readiness --initial-delay-seconds=30 --failure-threshold=3 --get-url=http://:8080/health
 ----
@@ -188,7 +188,7 @@ and parameters for both liveness and readiness probes.
 
 Add liveness and readiness probes to the Inventory service:
 
-[source]
+[source, bash]
 ----
 oc set probe dc/inventory --liveness --readiness --initial-delay-seconds=30 --failure-threshold=3 --get-url=http://:8080/node
 ----
@@ -198,7 +198,7 @@ OpenShift automatically restarts the Inventory pod and as soon as the health pro
 Using the `oc describe` command, you can get a detailed look into the deployment config and verify that the health probes are in fact
 configured as you wanted:
 
-[source]
+[source, bash]
 ----
 oc describe dc/inventory
 
@@ -217,7 +217,7 @@ Namespace:  {{COOLSTORE_PROJECT}}
 
 You are an expert in health probes by now! Add liveness and readiness probes to the API Gateway service:
 
-[source]
+[source, bash]
 ----
 oc set probe dc/gateway --liveness --readiness --initial-delay-seconds=15 --failure-threshold=3 --get-url=http://:8080/health
 ----
@@ -284,5 +284,12 @@ Click on any of the pods (blue circle) which takes you to the pod details. Click
 to see a more detailed view of the metrics charts.
 
 image::health-metrics-detailed.png[]
+
+[NOTE]
+====
+If you see the following error, click on the link to hawkular in the error
+message and accept the self-signed certificate
+image:health-metrics-error.png[]
+====
 
 Well done! You are ready to move on to the next lab.

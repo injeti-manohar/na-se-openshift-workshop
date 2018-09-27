@@ -1,7 +1,7 @@
 ##  Automating Deployments Using Pipelines
 
 In this lab you will learn about deployment pipelines and you will create a pipeline to
-automate build and deployment of the Inventory service.
+automate build and deployment of the gateway service.
 
 #### Continuous Delivery
 So far you have been building and deploying each service manually to OpenShift. Although
@@ -17,173 +17,6 @@ OpenShift simplifies building CI/CD Pipelines by integrating
 the popular https://jenkins.io/doc/book/pipeline/overview/[Jenkins pipelines] into
 the platform and enables defining truly complex workflows directly from within OpenShift.
 
-The first step for any deployment pipeline is to store all code and configurations in
-a source code repository.
-
-#### Create a Git Repository for Inventory
-
-{% if MINISHIFT == true %}
-
-First, create a new project and deploy the https://gogs.io[Gogs Git Server] on OpenShift
-which you will use in the rest of this lab as your Git server.
-
-[source]
-----
-$ oc new-project gogs
-$ oc new-app -f http://bit.ly/openshift-gogs-persistent-template \
-    --param=HOSTNAME=gogs-gogs.$(minishift ip).nip.io \
-    --param=GOGS_VERSION=0.9.113 \
-    --param=SKIP_TLS_VERIFY=true
-----
-
-After Gogs Git Server is ready, go the Gogs route url.
-
-NOTE: Remember how to find out the route urls via OpenShift CLI? Try `oc get route gogs`
-
-Click on **Register** to register a new user with the following details and then click on
-**Create New Account**:
-
-* Username: `developer`
-* Email: *your email*  (Don't worry! Gogs won't send you any emails)
-* Password: `developer`
-
-image::cd-gogs-signup.png[]
-
-You will be redirected to the sign in page. Sign in using the above username and password.
-
-Click on the plus icon on the top navigation bar and then on **New Repository**.
-
-image::cd-gogs-plus-icon.png[]
-
-Give `inventory-wildfly-swarm` as **Repository Name** and click on **Create Repository**
-button, leaving the rest with default values.
-
-image::cd-gogs-new-repo.png[]
-
-The Git repository is created now.
-
-Click on the copy-to-clipboard icon to near the
-HTTP Git url to copy it to the clipboard which you will need in a few minutes.
-
-image::cd-gogs-empty-repo.png[]
-
-Although you can use the `-n` or `--namespace` flag to specify the project when using
-OpenShift CLI, it's just easier to change the active project back to the
-`{{COOLSTORE_PROJECT}}` project.
-
-[source]
-$ oc project {{COOLSTORE_PROJECT}}
-----
-
-{% else %}
-
-You will use https://github.com/[GitHub], the vastly popular web-based Git hosting for this
-lab. If you don't already have an account on GitHub, you really should now! Head to
-https://github.com/[GitHub] and sign in with your account or sign up for a new account.
-
-[NOTE]
-====
-You could use any Git hosting such as GitLab, BitBucket, etc. However the
-instructions in this lab assume you are using GitHub.
-====
-
-Click on the plus icon on the top navigation bar and then on *New Repository*.
-
-image::cd-github-plus-icon.png[]
-
-Give `inventory-wildfly-swarm` as **Repository name** and click on **Create repository**
-button, leaving the rest with default values.
-
-image::cd-github-new-repo.png[]
-
-The Git repository is created now. Click on the copy-to-clipboard icon to near the
-HTTPS Git url to copy it to the clipboard which you will need in a few minutes.
-
-image::cd-github-empty-repo.png[]
-
-{% endif %}
-
-#### Push Inventory Code to the Git Repository
-
-Now that you have a Git repository for the Inventory service, you should push the
-source code into this Git repository.
-
-Go the `inventory-wildfly-swarm` folder, initialize it as a Git working copy and add
-the GitHub repository as the remote repository for your working copy.
-
-NOTE: Replace `GIT-REPO-URL` with the Git repository url copied in the previous steps
-
-NOTE: You can choose any directory, these instructions use `$HOME` as an example.
-
-In order to get started, you need to download the project source code.
-
-[source]
-----
-$ curl -skL -o projects.zip https://github.com/cricci82/cloud-native-labs/archive/ocp-3.10.zip
-----
-
-Unzip the `projects.zip` file in your home directory.
-
-You can use archiving utility with `zip` format support you have available on your machine.
-
-* Windows: `Expand-Archive -Path .\projects.zip ; Move-Item .\projects\cloud-native-labs-master\* .`
-* Linux: `unzip projects.zip && mv cloud-native-labs-master/* .`
-* Mac: `tar xvfz projects.zip --strip-components 1`
-
-After unzipping the projects, you should see these folders.
-
-[source]
-----
-$ ls -l
-
--rwxr-xr-x  1 user  wheel  1718 Aug 14 14:50 README.md
-drwxr-xr-x  6 user  wheel   204 Aug 14 14:50 catalog-spring-boot
-drwxr-xr-x  6 user  wheel   204 Aug 14 14:50 gateway-vertx
-drwxr-xr-x  6 user  wheel   204 Aug 14 14:50 inventory-wildfly-swarm
-drwxr-xr-x  9 user  wheel   306 Aug 14 14:50 solutions
-drwxr-xr-x  8 user  wheel   272 Aug 14 14:50 web-nodejs
-----
-
-Next, we'll initialize the local git repository and push it to your new remote
-repository
-
-[source]
-----
-$ cd inventory-wildfly-swarm
-$ git init
-$ git remote add origin GIT-REPO-URL
-----
-
-
-Before you commit the source code to the Git repository, configure your name and
-email so that the commit owner can be seen on the repository. If you want, you can
-replace the name and the email with your own in the following commands:
-
-[source]
-----
-git config --global user.name "Developer"
-git config --global user.email "developer@me.com"
-----
-
-Commit and push the existing code to the GitHub repository.
-
-[source]
-----
-$ git add . --all
-$ git commit -m "initial add"
-$ git push -u origin master
-----
-
-Enter your Git repository username and password if you get asked to enter your credentials. Go
-to your `inventory-wildfly-swarm` repository web interface and refresh the page. You should
-see the project files in the repository.
-
-{% if MINISHIFT == true %}
-image::cd-gogs-inventory-repo.png[]
-{% else %}
-image::cd-github-inventory-repo.png[]
-{% endif %}
-
 #### Define the Deployment Pipeline
 
 OpenShift has built-in support for CI/CD pipelines by allowing developers to define
@@ -198,9 +31,9 @@ a Git repository and referenced by the build configuration.
 Jenkinsfile is a text file that contains the definition of a Jenkins Pipeline
 and is created using a https://jenkins.io/doc/book/pipeline/syntax/[scripted or declarative syntax].
 
-Create a file called `Jenkinsfile` in the root the `inventory-wildfly-swarm`:
+Create a file called `Jenkinsfile` in the root of the project directory:
 
-[source]
+[source, bash]
 ----
 cat <<EOF > Jenkinsfile
 pipeline {
@@ -208,18 +41,12 @@ pipeline {
       label 'maven'
   }
   stages {
-    stage('Build JAR') {
-      steps {
-        sh "mvn package"
-        stash name:"jar", includes:"target/inventory-1.0-SNAPSHOT-swarm.jar"
-      }
-    }
     stage('Build Image') {
       steps {
-        unstash name:"jar"
         script {
           openshift.withCluster() {
-            openshift.startBuild("inventory-s2i", "--from-file=target/inventory-1.0-SNAPSHOT-swarm.jar", "--wait")
+            def bc = openshift.startBuild("gateway")
+            bc.logs('-f')
           }
         }
       }
@@ -228,7 +55,7 @@ pipeline {
       steps {
         script {
           openshift.withCluster() {
-            def dc = openshift.selector("dc", "inventory")
+            def dc = openshift.selector("dc", "gateway")
             dc.rollout().latest()
             dc.rollout().status()
           }
@@ -243,8 +70,8 @@ EOF
 This pipeline has three stages:
 
 * *Build JAR*: to build and test the jar file using Maven
-* *Build Image*: to build a container image from the Inventory JAR archive using OpenShift S2I
-* *Deploy*: to deploy the Inventory container image in the current project
+* *Build Image*: to build a container image from the gateway JAR archive using OpenShift S2I
+* *Deploy*: to deploy the gateway container image in the current project
 
 Note that the pipeline definition is fully integrated with OpenShift and you can
 perform operations like image build, image deploy, etc directly from within the `Jenkinsfile`.
@@ -254,11 +81,11 @@ and store them in a source repository for version control.
 
 Commit and push the `Jenkinsfile` to the Git repository.
 
-[source]
+[source, bash]
 ----
-$ git add Jenkinsfile
-$ git commit -m "pipeline added"
-$ git push origin master
+git add Jenkinsfile
+git commit -m "pipeline added"
+git push origin master
 ----
 
 The pipeline definition is ready and now you can create a deployment pipeline using
@@ -271,35 +98,36 @@ enable creating deployment pipelines using the widely popular `Jenkinsfile` form
 
 OpenShift automates deployments using {{OPENSHIFT_DOCS_BASE}}/dev_guide/deployments/basic_deployment_operations.html#triggers[deployment triggers]
 that react to changes to the container image or configuration. Since you want to control the deployments instead
-from the pipeline, you should remove the Inventory deploy triggers so that building a new
-Inventory container image wouldn't automatically result in a new deployment. That would
+from the pipeline, you should remove the gateway deploy triggers so that building a new
+gateway container image wouldn't automatically result in a new deployment. That would
 allow the pipeline to decide when a deployment should occur.
 
-Remove the Inventory deployment triggers:
+Remove the gateway deployment triggers:
 
-[source]
+[source, bash]
 ----
-$ oc set triggers dc/inventory --manual
+oc set triggers dc/gateway --manual
 ----
 
 Deploy a Jenkins server using the provided template and container image that
 comes out-of-the-box with OpenShift:
 
-```
+[source, bash]
+----
 oc new-app jenkins-ephemeral
-```
+----
 
 After Jenkins is deployed and is running (verify in web console), then create a
-deployment pipeline by running the following command within the `inventory-widlfly-swarm` folder:
+deployment pipeline by running the following command:
 
-[source]
+[source, bash]
 ----
-$ oc new-app . --name=inventory-pipeline --strategy=pipeline
+oc new-app . --name=gateway-pipeline --strategy=pipeline
 ----
 
 The above command creates a new build config of type pipeline which is automatically
 configured to fetch the `Jenkinsfile` from the Git repository of the current folder
-(`inventory-wildfly-swarm` Git repository) and execute it on Jenkins.
+(`gateway-wildfly-swarm` Git repository) and execute it on Jenkins.
 
 Go OpenShift Web Console inside the **{{COOLSTORE_PROJECT}}** project and from the left sidebar
 click on **Builds >> Pipelines**
@@ -314,27 +142,29 @@ advanced pipelines in the
 https://github.com/openshift/origin/tree/master/examples/jenkins/pipeline[OpenShift GitHub Repository].
 
 In order to update the deployment pipeline, all you need to do is to update the `Jenkinsfile`
-in the `inventory-wildfly-swarm` Git repository. OpenShift pipeline automatically executes the
+in the `gateway-wildfly-swarm` Git repository. OpenShift pipeline automatically executes the
 updated pipeline next time it runs.
 
 #### Run the Pipeline on Every Code Change
 
-Manually triggering the deployment pipeline to run is useful but the real goes is to be able
-to build and deploy every change in code or configuration at least to lower environments
-(e.g. dev and test) and ideally all the way to production with some manual approvals in-place.
+Manually triggering the deployment pipeline to run is useful but the real goal
+is to be able to build and deploy every change in code or configuration at least
+to lower environments (e.g. dev and test) and ideally all the way to production
+with some manual approvals in-place.
 
-In order to automate triggering the pipeline, you can define a webhook on your Git repository
-to notify OpenShift on every commit that is made to the Git repository and trigger a pipeline
-execution.
+In order to automate triggering the pipeline, you can define a webhook on your
+Git repository to notify OpenShift on every commit that is made to the Git
+repository and trigger a pipeline execution.
 
-You can get see the webhook links in the OpenShift Web Console by going to **Build >> Pipelines**, clicking
-on the pipeline and going to the **Configurations** tab.
+You can get see the webhook links in the OpenShift Web Console by going to
+**Build >> Pipelines**, clicking on the pipeline and going to the
+**Configurations** tab.
 
 {% if MINISHIFT == true %}
 
 Copy the Generic webhook url which you will need in the next steps.
 
-Go to Gogs and your **inventory-wildfly-swarm** Git repository, then click on **Settings**.
+Go to Gogs and your **gateway-wildfly-swarm** Git repository, then click on **Settings**.
 
 image::cd-gogs-settings-link.png[]
 
@@ -342,7 +172,7 @@ On the left menu, click on **Webhooks** and then on **Add Webhook** button and t
 
 Create a webhook with the following details:
 
-* **Payload URL**: paste the Generic webhook url you copied from the `inventory-pipeline`
+* **Payload URL**: paste the Generic webhook url you copied from the `gateway-pipeline`
 * **Content type**: `application/json`
 
 Click on **Add Webhook**.
@@ -351,14 +181,14 @@ image::cd-gogs-webhook-add.png[]
 
 All done. You can click on the newly defined webhook to see the list of *Recent Delivery*.
 Clicking on the **Test Delivery** button allows you to manually trigger the webhook for
-testing purposes. Click on it and verify that the `inventory-pipeline` start running
+testing purposes. Click on it and verify that the `gateway-pipeline` start running
 immediately.
 
 {% else %}
 
 Copy the GitHub webhook url which you will need in the next steps.
 
-Go to GitHub and your **inventory-wildfly-swarm** Git repository, then click on **Settings**.
+Go to GitHub and your **gateway-wildfly-swarm** Git repository, then click on **Settings**.
 
 image::cd-github-settings-link.png[]
 
@@ -367,7 +197,7 @@ once more if you are ask to do so.
 
 Create a webhook with the following details:
 
-* **Payload URL**: paste the GitHub webhook url you copied from the `inventory-pipeline`
+* **Payload URL**: paste the GitHub webhook url you copied from the `gateway-pipeline`
 * **Content type**: `application/json`
 * Disable SSL by clicking on *Disable SSL verification*.
 

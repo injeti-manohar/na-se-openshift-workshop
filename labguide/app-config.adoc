@@ -61,7 +61,7 @@ oc new-app postgresql-persistent \
     --param=POSTGRESQL_DATABASE=inventory \
     --param=POSTGRESQL_USER=inventory \
     --param=POSTGRESQL_PASSWORD=inventory \
-    --labels=app=inventory
+    --labels=app=inventory-db
 ----
 
 [NOTE]
@@ -81,7 +81,7 @@ oc new-app postgresql-persistent \
     --param=POSTGRESQL_DATABASE=catalog \
     --param=POSTGRESQL_USER=catalog \
     --param=POSTGRESQL_PASSWORD=catalog \
-    --labels=app=catalog
+    --labels=app=catalog-db
 ----
 
 Now you can move on to configure the Inventory and Catalog service to use these PostgreSQL databases.
@@ -106,7 +106,7 @@ name to this configuration (e.g. `prod`) in order to tell WildFly Swarm which on
 
 [source,bash,role=copypaste]
 ----
-$ cat <<EOF > ./project-defaults.yml
+cat <<EOF > ./project-defaults.yml
 swarm:
   datasources:
     data-sources:
@@ -253,7 +253,7 @@ credentials:
 
 [source,bash,role=copypaste]
 ----
-$ cat <<EOF > ./application.properties
+cat <<EOF > ./application.properties
 spring.datasource.url=jdbc:postgresql://catalog-postgresql:5432/catalog
 spring.datasource.username=catalog
 spring.datasource.password=catalog

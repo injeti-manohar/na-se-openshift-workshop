@@ -1,0 +1,230 @@
+## Advanced Application Deployment
+
+Utilizing deployment patterns such as blue/green or canary releases, development
+teams can release new versions into production faster while reducing risk.
+OpenShift provides capabilities natively in the platform to make it easy to
+implement these types of scenarios.
+
+In this lab, you will update your CI/CD pipeline to introduce a new canary stage.
+With a canary release, a new version of the application is deployed into production
+alongside the old version.  Using advanced traffic routing, a small amount of
+production traffic is directed to the new version.  The canary is monitored for
+issues, and if all is good, then it is slowly scaled out to server more and more
+production traffic until it completely supersedes the old version.  This approach
+allows development teams to release changes faster but reduce the risk of deploying
+error prone code.
+
+image::ad-routes.png[]
+
+To start the lab, open a new terminal and create a curl loop that will
+continuously hit your gateway api:
+
+[source, bash]
+----
+while true, curl http://gateway-coolstore.{{OCP_ROUTING_SUFFIX}}/hello; done
+----
+
+We will use this terminal to view how our canary is slowly rolling out.
+
+### Setting up a Canary Deployment
+
+As discussed in previous labs, an OpenShift *Route* allows you to expose your
+services to the outside world.  In addition, a *Route* allows you to route traffic
+across multiple services and balance the traffic using weights.  You will create
+a new service for the canary and use these weights to control how the traffic
+is routed to our canary version.
+
+Start by deploying the new canary service
+
+[source, bash]
+----
+oc new-app redhat-openjdk18-openshift:1.2~. \
+  --context-dir=gateway-vertx \
+  --name=gateway-canary -l app=gateway
+----
+
+Now that the canary is deployed, you want to update the route to add the canary
+service as a backend.  The below command will add the new backend and set the
+weight to zero for the canary and 100% for the production backend.  This way no
+traffic will hit the canary version yet.
+
+[source, bash]
+----
+oc set route-backends gateway gateway=100 gateway-canary=0
+----
+
+From the OpenShift Web Console, observe that the route for the gateway application
+shows the traffic splits:
+
+image::ad-traffic-splits.png[]
+
+[NOTE]
+====
+In the previous lab you should have already disabled build and deploy triggers
+on the gateway application.  As a reminder, these triggers were removed with
+the following command:
+
+```
+oc set triggers dc/gateway --manual
+```
+====
+
+### Testing the Canary
+
+Next you will make a small code change to the Gateway service and update the
+route to start sending traffic to the canary.
+
+Edit `gateway-vertx/src/main/java/com/redhat/cloudnative/gateway/GatewayVerticle.java`
+to make a minor change to the *hello* route:
+
+[source, java]
+----
+...
+    @Override
+    public void start() {
+        Router router = Router.router(vertx);
+        router.route().handler(CorsHandler.create("*").allowedMethod(HttpMethod.GET));
+        router.get("/health").handler(ctx -> ctx.response().end(new JsonObject().put("status", "UP").toString()));
+        // Update the line below
+        router.get("/hello").handler(ctx -> ctx.response().end(new JsonObject().put("message", new Timestamp(new Date().getTime()) + " Hello, World! - Update").toString() + "\n"));
+        router.get("/api/products").handler(this::products);
+...
+----
+
+Commit and push your changes.
+
+[source, bash]
+----
+git commit -am "Updating hello route"
+git push
+----
+
+Now kickoff a new build of the canary
+
+[source, bash]
+----
+oc start-build gateway-canary
+----
+
+NOTE: You can tail the build log by running `oc logs -f bc/gateway-canary`
+
+Go back to your terminal with the looping curl command and observe that none of
+the requests are returning your canary version yet.  This is because we need to
+update the route weights.
+
+Update the weights to send 10% of traffic to the canary by running the following
+command:
+
+[source,bash]
+----
+oc set route-backends gateway gateway=90 gateway-canary=10
+----
+
+Once again, return to your terminal with the looping curl and you will start to
+see responses from your canary version:
+
+image::ad-canary-results.png[]
+
+Building upon the previous lab, you will now update the Continuous Delivery
+pipeline to orchestrate our canary process.
+
+Paste the updated pipeline below into your shell:
+
+[source, bash, copypaste]
+----
+cat <<EOF > Jenkinsfile
+pipeline {
+  agent {
+      label 'maven'
+  }
+  stages {
+    stage('Build Image') {
+      steps {
+        script {
+          openshift.withCluster() {
+            def bc = openshift.startBuild("gateway-canary")
+            bc.logs('-f')
+          }
+        }
+      }
+    }
+    stage('Deploy Canary') {
+      steps {
+        script {
+          openshift.withCluster() {
+            def dc = openshift.selector("dc", "gateway")
+            dc.rollout().latest()
+            dc.rollout().status()
+            sh "oc set route-backends gateway gateway=90 gateway-canary=10"
+          }
+        }
+      }
+    }
+    stage('Verify Canary') {
+      steps {
+        script {
+             promoteOrRollback = input message: 'Promote or rollback canary deployment?',
+                     parameters: [choice(name: "Promote or Rollback?", choices: 'Promote\nRollback', description: '')]
+        }
+      }
+    }
+    stage("Rollback canary"){
+        when{
+            expression {
+                return promoteOrRollback == 'Rollback'
+            }
+        }
+        steps{
+            echo "Rollback for canary deployment."
+            script {
+                openshift.withCluster {
+                    openshift.withProject('coolstore') {
+                        openshift.selector('dc', 'gateway-canary').rollout().undo()
+
+                        //wait for rollout
+                        openshift.selector('dc', 'gateway-canary').rollout().status()
+
+                        //set canary imagestream back to production tag
+                        openshift.tag("coolstore/gateway:latest", "coolstore/gateway-canary:latest")
+                    }
+                }
+            }
+        }
+    }
+    stage("Production deployment") {
+    when{
+        expression {
+            return promoteOrRollback != 'Rollback' //Promote or null (first deployment)
+        }
+    }
+    steps {
+        script {
+            openshift.withCluster() {
+                openshift.withProject("coolstore") {
+                    //Tag latest from build namespace
+                    openshift.tag("coolstore/gateway-canary:latest", "coolstore/gateway:latest")
+
+                    /***
+                     * Rollout
+                     ***/
+                    openshift.selector('dc', 'gateway').rollout().latest()
+                    //wait for rollout. It waits until pods are running (if readiness probe is set)
+                    openshift.selector('dc', 'gateway').rollout().status()
+                    sh "oc set route-backends gateway gateway=100 gateway-canary=0"
+                }
+            }
+        }
+      }
+    }
+  }
+}
+EOF
+----
+
+Commit and push your changes:
+
+[source, bash]
+----
+git commit -am "Updating Pipeline for Canary Release"
+git push
+----

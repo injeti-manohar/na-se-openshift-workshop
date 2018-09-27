@@ -66,6 +66,8 @@ config:
       value: "https://openshift.external.aws.testdrive.openshift.com/healthz/ready"
     - name: CODE_CLONE_LOCATION
       value: "/opt/lab/code"
+    - name: OPENSHIFT_DOCS_BASE
+      value: "https://docs.openshift.com/container-platform/3.10"
 
 modules:
   environment:
@@ -107,3 +109,5 @@ modules:
       name: Application Configuration
   continuous-delivery:
       name: Continuous Delivery
+  advanced-deployments:
+      name: Advanced Application Deployment

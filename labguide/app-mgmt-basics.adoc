@@ -26,6 +26,97 @@ You will want to have an SSH session opened to the `master` server for these
 lab exercises.
 ====
 
+The first step for any deployment pipeline is to store all code and configurations in
+a source code repository.
+
+In order to get started, you need to download the project source code.
+
+[source]
+----
+$ mkdir cloud-native-labs
+$ cd cloud-native-labs
+$ curl -skL -o projects.zip https://github.com/cricci82/cloud-native-labs/archive/ocp-3.10.zip
+----
+
+Unzip the `projects.zip` file in your home directory.
+
+You can use archiving utility with `zip` format support you have available on your machine.
+
+* Windows: `Expand-Archive -Path .\projects.zip ; Move-Item .\projects\cloud-native-labs-master\* .`
+* Linux: `unzip projects.zip && mv cloud-native-labs-master/* .`
+* Mac: `tar xvfz projects.zip --strip-components 1`
+
+After unzipping the projects, you should see these folders.
+
+[source]
+----
+$ ls -l
+
+-rwxr-xr-x  1 user  wheel  1718 Aug 14 14:50 README.md
+drwxr-xr-x  6 user  wheel   204 Aug 14 14:50 catalog-spring-boot
+drwxr-xr-x  6 user  wheel   204 Aug 14 14:50 gateway-vertx
+drwxr-xr-x  6 user  wheel   204 Aug 14 14:50 inventory-wildfly-swarm
+drwxr-xr-x  9 user  wheel   306 Aug 14 14:50 solutions
+drwxr-xr-x  8 user  wheel   272 Aug 14 14:50 web-nodejs
+----
+
+You will use https://github.com/[GitHub], the vastly popular web-based Git hosting for this
+lab. If you don't already have an account on GitHub, you really should now! Head to
+https://github.com/[GitHub] and sign in with your account or sign up for a new account.
+
+[NOTE]
+====
+You could use any Git hosting such as GitLab, BitBucket, etc. However the
+instructions in this lab assume you are using GitHub.
+====
+
+Click on the plus icon on the top navigation bar and then on *New Repository*.
+
+image::cd-github-plus-icon.png[]
+
+Give `inventory-wildfly-swarm` as **Repository name** and click on **Create repository**
+button, leaving the rest with default values.
+
+image::cd-github-new-repo.png[]
+
+The Git repository is created now. Click on the copy-to-clipboard icon to near the
+HTTPS Git url to copy it to the clipboard which you will need in a few minutes.
+
+image::cd-github-empty-repo.png[]
+
+Before you commit the source code to the Git repository, configure your name and
+email so that the commit owner can be seen on the repository. If you want, you can
+replace the name and the email with your own in the following commands:
+
+[source]
+----
+git config --global user.name "Developer"
+git config --global user.email "developer@me.com"
+----
+
+Next, we'll initialize the local git repository and push it to your new remote
+repository
+
+[NOTE]
+====
+In subsequent commands, replace `GIT-REPO-URL` with the Git repository url
+copied in the previous steps
+====
+
+[source]
+----
+$ git init
+$ git remote add origin GIT-REPO-URL
+
+$ git add . --all
+$ git commit -m "initial add"
+$ git push -u origin master
+----
+
+Enter your Git repository username and password if you get asked to enter your
+credentials. Go to your `cloud-native-labs` repository web interface and refresh
+the page. You should see the project files in the repository.
+
 ### Core OpenShift Concepts
 As a future administrator of OpenShift, it is important to understand several
 core building blocks as it relates to applications. Understanding these building
@@ -65,7 +156,7 @@ to the OpenShift platform.
 
 [source,bash]
 ----
-oc new-app redhat-openjdk18-openshift:1.2~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
+oc new-app redhat-openjdk18-openshift:1.2~. \
     --context-dir=inventory-wildfly-swarm \
     --name=inventory
 ----
@@ -141,8 +232,9 @@ oc get pods
 And you will see something like the following:
 
 ----
-NAME                READY     STATUS    RESTARTS   AGE
-inventory-1-88p54   1/1       Running   0          13m
+NAME                READY     STATUS      RESTARTS   AGE
+inventory-1-build   0/1       Completed   0          4m
+inventory-1-88p54   1/1       Running     0          13m
 ----
 
 NOTE: Pod names are dynamically generated as part of the deployment process,
@@ -460,7 +552,7 @@ Open JDK S2I image.
 
 [source,bash]
 ----
-oc new-app redhat-openjdk18-openshift:1.2~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
+oc new-app redhat-openjdk18-openshift:1.2~. \
   --context-dir=catalog-spring-boot \
   --name=catalog
 ----
@@ -480,7 +572,7 @@ oc policy add-role-to-user view -z default
 
 [source,bash]
 ----
-oc new-app redhat-openjdk18-openshift:1.2~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
+oc new-app redhat-openjdk18-openshift:1.2~. \
   --context-dir=gateway-vertx \
   --name=gateway
 ----
@@ -490,7 +582,7 @@ Lastly, we need to deploy our Web UI which will use the node.js S2I builder imag
 
 [source,bash]
 ----
-oc new-app nodejs:8~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
+oc new-app nodejs:8~. \
   --context-dir=web-nodejs \
   --name=web
 ----
@@ -526,13 +618,15 @@ oc describe dc router -n default
 
 #### Creating a Route
 Creating a *Route* is a pretty straight-forward process.  You simply `expose`
-the *Service* via the command line. The name for your web frontend *Service*
-is `web`. With the *Service* name, creating a *Route* is a simple
-one-command task:
+the *Service* via the command line. With the *Service* name, creating a *Route* is a simple
+one-command task.  Create routes for each of your services:
 
 [source,bash]
 ----
 oc expose service web
+oc expose service gateway
+oc expose service inventory
+oc expose service catalog
 ----
 
 You will see:
@@ -551,8 +645,11 @@ oc get route
 You will see something like:
 
 ----
-NAME      HOST/PORT                                                            PATH      SERVICES   PORT       TERMINATION   WILDCARD
-web     web-coolstore.{{OCP_ROUTING_SUFFIX}}             web      8080-tcp                 None
+NAME        HOST/PORT                                                     PATH      SERVICES   PORT       TERMINATION   WILDCARD
+catalog     catalog-coolstore.{{OCP_ROUTING_SUFFIX}}             catalog     8080-tcp                 None
+gateway     gateway-coolstore.{{OCP_ROUTING_SUFFIX}}             gateway     8080-tcp                 None
+inventory   inventory-coolstore.{{OCP_ROUTING_SUFFIX}}           inventory   8080-tcp                 None
+web         web-coolstore.{{OCP_ROUTING_SUFFIX}}                 web         8080-tcp                 None
 ----
 
 If you take a look at the `HOST/PORT` column, you'll see a familiar looking
@@ -581,13 +678,6 @@ The *Route* is associated with the *Service*, and the router automatically
 proxies connections directly to the *Pod*. The router itself runs as a *Pod*. It
 bridges the "real" internet to the SDN.
 
-As a last step, we also want to expose the service for our API Gateway:
-
-[source,bash]
-----
-oc expose service gateway
-----
-
 At this point our application should be deployed and accessible through the
 Web UI Route:
 
@@ -605,23 +695,25 @@ oc new-project coolstore
 oc policy add-role-to-user view -z default
 
 # Deploy Services
-oc new-app redhat-openjdk18-openshift:1.2~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
+oc new-app redhat-openjdk18-openshift:1.2~. \
     --context-dir=inventory-wildfly-swarm \
     --name=inventory
 
-oc new-app redhat-openjdk18-openshift:1.2~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
+oc new-app redhat-openjdk18-openshift:1.2~. \
   --context-dir=catalog-spring-boot \
   --name=catalog
 
-oc new-app redhat-openjdk18-openshift:1.2~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
+oc new-app redhat-openjdk18-openshift:1.2~. \
   --context-dir=gateway-vertx \
   --name=gateway
 
-oc new-app nodejs:8~https://github.com/cricci82/cloud-native-labs.git#ocp-3.10 \
+oc new-app nodejs:8~. \
   --context-dir=web-nodejs \
   --name=web
 
 # Expose Services
 oc expose service web
 oc expose service gateway
+oc expose service inventory
+oc expose service catalog
 ----
