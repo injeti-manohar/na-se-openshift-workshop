@@ -33,9 +33,11 @@ In order to get started, you need to download the project source code.
 
 [source]
 ----
-$ mkdir cloud-native-labs
-$ cd cloud-native-labs
-$ curl -skL -o projects.zip https://github.com/cricci82/cloud-native-labs/archive/ocp-3.10.zip
+mkdir cloud-native-labs
+cd cloud-native-labs
+curl -skL -o projects.tar.gz https://github.com/cricci82/cloud-native-labs/archive/ocp-3.10.tar.gz
+tar xzvf projects.tar.gz
+cd cloud-native-labs-ocp-3.10/
 ----
 
 Unzip the `projects.zip` file in your home directory.
@@ -74,7 +76,7 @@ Click on the plus icon on the top navigation bar and then on *New Repository*.
 
 image::cd-github-plus-icon.png[]
 
-Give `inventory-wildfly-swarm` as **Repository name** and click on **Create repository**
+Give `cloud-native-labs` as **Repository name** and click on **Create repository**
 button, leaving the rest with default values.
 
 image::cd-github-new-repo.png[]
@@ -105,12 +107,12 @@ copied in the previous steps
 
 [source]
 ----
-$ git init
-$ git remote add origin GIT-REPO-URL
+git init
+git remote add origin GIT-REPO-URL
 
-$ git add . --all
-$ git commit -m "initial add"
-$ git push -u origin master
+git add . --all
+git commit -m "initial add"
+git push -u origin master
 ----
 
 Enter your Git repository username and password if you get asked to enter your
@@ -133,6 +135,7 @@ For this exercise, first create a *Project* to hold our resources:
 
 [source,bash]
 ----
+oc login -u teamuser1 -p openshift
 oc new-project coolstore
 ----
 

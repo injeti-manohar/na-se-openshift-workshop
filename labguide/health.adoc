@@ -61,7 +61,7 @@ NOTE: Remember how to find out the route urls? Try `oc get route catalog`
 
 [source, bash]
 ----
-curl http://CATALOG_ROUTE_HOST/health
+curl http://catalog-coolstore.{{OCP_ROUTING_SUFFIX}}/health
 
 {"status":"UP"}
 ----
@@ -77,7 +77,7 @@ NOTE: You know this by know! Use `oc get route inventory` to get the Inventory r
 
 [source, bash]
 ----
-curl http://{{INVENTORY_ROUTE_HOST}}/node
+curl http://inventory-coolstore.{{OCP_ROUTING_SUFFIX}}/node
 
 {
     "name" : "localhost",
@@ -99,7 +99,7 @@ NOTE: Yup! You can use `oc get route gateway` to get the API Gateway route url
 
 [source, bash]
 ----
-curl http://{{API_GATEWAY_ROUTE_HOST}}/health
+curl http://gateway-coolstore.{{OCP_ROUTING_SUFFIX}}/health
 
 {"status":"UP"}
 ----
@@ -109,6 +109,12 @@ can use the root context ("/") of the Web UI in this lab to verify it's up and r
 
 ####  Monitoring Catalog Service Health
 
+Switch back to the coolstore project
+
+[source, bash]
+----
+oc project coolstore
+----
 Health probes are defined on the deployment config for each pod and can be added using OpenShift Web
 Console or OpenShift CLI. You will try both in this lab.
 
