@@ -1068,9 +1068,9 @@ Resources:
                     node01.internal.${PublicHostedZone} openshift_hostname=node01.internal.${PublicHostedZone} openshift_public_hostname=node01.${AWS::AccountId}.${PublicHostedZone} openshift_node_group_name='node-config-compute'
                     node02.internal.${PublicHostedZone} openshift_hostname=node02.internal.${PublicHostedZone} openshift_public_hostname=node02.${AWS::AccountId}.${PublicHostedZone} openshift_node_group_name='node-config-compute'
                     node03.internal.${PublicHostedZone} openshift_hostname=node03.internal.${PublicHostedZone} openshift_public_hostname=node03.${AWS::AccountId}.${PublicHostedZone} openshift_node_group_name='node-config-compute'
-                    node04.internal.${PublicHostedZone} openshift_node_group_name='node-config-compute' openshift_hostname=node04.internal.${PublicHostedZone} openshift_public_hostname=node04.${AWS::AccountId}.${PublicHostedZone} openshift_node_group_name='node-config-infra'
-                    node05.internal.${PublicHostedZone} openshift_node_group_name='node-config-compute' openshift_hostname=node05.internal.${PublicHostedZone} openshift_public_hostname=node05.${AWS::AccountId}.${PublicHostedZone} openshift_node_group_name='node-config-infra'
-                    node06.internal.${PublicHostedZone} openshift_node_group_name='node-config-compute' openshift_hostname=node06.internal.${PublicHostedZone} openshift_public_hostname=node06.${AWS::AccountId}.${PublicHostedZone} openshift_node_group_name='node-config-infra'
+                    node04.internal.${PublicHostedZone} openshift_node_group_name='node-config-compute' openshift_hostname=node04.internal.${PublicHostedZone} openshift_public_hostname=node04.${AWS::AccountId}.${PublicHostedZone} openshift_node_group_name='node-config-compute'
+                    node05.internal.${PublicHostedZone} openshift_node_group_name='node-config-compute' openshift_hostname=node05.internal.${PublicHostedZone} openshift_public_hostname=node05.${AWS::AccountId}.${PublicHostedZone} openshift_node_group_name='node-config-compute'
+                    node06.internal.${PublicHostedZone} openshift_node_group_name='node-config-compute' openshift_hostname=node06.internal.${PublicHostedZone} openshift_public_hostname=node06.${AWS::AccountId}.${PublicHostedZone} openshift_node_group_name='node-config-compute'
 
                     #scaleup_[new_nodes]
 
