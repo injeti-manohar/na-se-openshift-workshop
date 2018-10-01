@@ -35,20 +35,12 @@ In order to get started, you need to download the project source code.
 ----
 mkdir cloud-native-labs
 cd cloud-native-labs
-curl -skL -o projects.tar.gz https://github.com/cricci82/cloud-native-labs/archive/ocp-3.10.tar.gz
+curl -skL -o projects.tar.gz https://github.com/na-se/cloud-native-labs/archive/ocp-3.10.tar.gz
 tar xzvf projects.tar.gz
 cd cloud-native-labs-ocp-3.10/
 ----
 
-Unzip the `projects.zip` file in your home directory.
-
-You can use archiving utility with `zip` format support you have available on your machine.
-
-* Windows: `Expand-Archive -Path .\projects.zip ; Move-Item .\projects\cloud-native-labs-master\* .`
-* Linux: `unzip projects.zip && mv cloud-native-labs-master/* .`
-* Mac: `tar xvfz projects.zip --strip-components 1`
-
-After unzipping the projects, you should see these folders.
+You should see these folders.
 
 [source]
 ----

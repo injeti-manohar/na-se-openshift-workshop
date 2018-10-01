@@ -16,12 +16,12 @@ error prone code.
 
 image::ad-routes.png[]
 
-To start the lab, open a new terminal and create a curl loop that will
+To start the lab, open a new {{ SSH_CONSOLE_URL }}[terminal] and create a curl loop that will
 continuously hit your gateway api:
 
 [source, bash]
 ----
-while true, curl http://gateway-coolstore.{{OCP_ROUTING_SUFFIX}}/hello; done
+while true; do curl http://gateway-coolstore.{{OCP_ROUTING_SUFFIX}}/hello; done
 ----
 
 We will use this terminal to view how our canary is slowly rolling out.

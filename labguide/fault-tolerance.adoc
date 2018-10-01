@@ -39,7 +39,7 @@ down arrows on the right side of each pods blue circle.
 
 First, get list of deployment configs available in the project.
 
-[source]
+[source, bash]
 ----
 oc project {{COOLSTORE_PROJECT}}
 oc get dc
@@ -53,7 +53,7 @@ web         1          1         1         config,image(web:latest)
 
 And then, scale the `web` deployment config to 2 pods:
 
-[source]
+[source, bash]
 ----
 oc scale dc/web --replicas=2
 ----
@@ -67,7 +67,7 @@ image::fault-scale-up.png[]
 You can verify that the new pod is added to the load balancer by checking the details of the
 Web UI service object:
 
-[source]
+[source, bash]
 ----
 oc describe svc/web
 
@@ -136,7 +136,7 @@ a single core, it would be represented as 100m. Memory is measured in
 bytes and is specified with {{OPENSHIFT_DOCS_BASE}}/dev_guide/compute_resources.html#dev-compute-resources[SI suffices]
 (E, P, T, G, M, K) or their power-of-two-equivalents (Ei, Pi, Ti, Gi, Mi, Ki).
 ====
-[source]
+[source, bash]
 ----
 oc set resources dc/web --limits=cpu=400m,memory=512Mi --requests=cpu=200m,memory=256Mi
 
@@ -162,7 +162,7 @@ the **{{COOLSTORE_PROJECT}}** project. Click then on **web** and from the **Acti
 the top-right, choose **Edit Autoscaler**.
 ====
 
-[source]
+[source, bash]
 ----
 oc autoscale dc/web --min 1 --max 5 --cpu-percent=40
 
@@ -176,7 +176,7 @@ deploy the `siege` container image from https://hub.docker.com/r/siamaksade/sieg
 as a https://docs.openshift.com/container-platform/3.10/dev_guide/jobs.html[Kubernetes job] and
 generate some load on the Web UI:
 
-[source]
+[source, bash]
 ----
 oc run web-load --restart='OnFailure' --image=siamaksade/siege -- -c80 -d2 -t5M  http://web:8080/
 ----
@@ -247,7 +247,7 @@ config.
 All of the above comes out-of-the-box and don't need any extra configuration. Remove the Catalog
 pod to verify how OpenShift starts the pod again. First, check the Catalog pod that is running:
 
-[source]
+[source, bash]
 ----
 oc get pods -l deploymentconfig=catalog
 
@@ -260,14 +260,14 @@ assigned to them. You can see pods labels using `oc get pods --show-labels` comm
 
 Delete the Catalog pod.
 
-[source]
+[source, bash]
 ----
 oc delete pods -l deploymentconfig=catalog
 ----
 
 You need to be fast for this one! List the Catalog pods again immediately:
 
-[source]
+[source, bash]
 ----
 oc get pods -l deploymentconfig=catalog
 

@@ -54,7 +54,7 @@ making it simple to re-create complex deployments by just deploying a single tem
 be parameterized to get input for fields like service names and generate values for fields like passwords.
 ====
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc new-app postgresql-persistent \
     --param=DATABASE_SERVICE_NAME=inventory-postgresql \
@@ -74,7 +74,7 @@ password.
 
 Deploy another PostgreSQL database for the Catalog service:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc new-app postgresql-persistent \
     --param=DATABASE_SERVICE_NAME=catalog-postgresql \
@@ -104,7 +104,7 @@ Check out `inventory-wildfly-swarm/src/main/resources/project-defaults.yml` whic
 Create a YAML file with the PostgreSQL database credentials. Note that you can give an arbitrary
 name to this configuration (e.g. `prod`) in order to tell WildFly Swarm which one to use:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 cat <<EOF > ./project-defaults.yml
 swarm:
@@ -125,7 +125,7 @@ exposed by OpenShift and accessible to containers running on OpenShift.
 And then create a config map that you will use to overlay on the default `project-defaults.yml` which is
 packaged in the Inventory JAR archive:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc create configmap inventory --from-file=./project-defaults.yml
 ----
@@ -155,7 +155,7 @@ using `oc describe cm inventory` command.
 Modify the Inventory deployment config so that it injects the YAML configuration you just created as
 a config map into the Inventory container:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc volume dc/inventory --add --configmap-name=inventory --mount-path=/app/config
 ----
@@ -174,7 +174,7 @@ https://access.redhat.com/documentation/en-us/red_hat_jboss_middleware_for_opens
 to tune the JVM without the need to rebuild a new Java runtime container image every time a new option is needed.
 ====
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc set env dc/inventory JAVA_ARGS="-s /app/config/project-defaults.yml"
 ----
@@ -184,7 +184,7 @@ The Inventory pod gets restarted automatically due to the configuration changes.
 and then verify that the config map is in fact injected into the container by running
 a shell command inside the Inventory container:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc rsh dc/inventory cat /app/config/project-defaults.yml
 ----
@@ -192,7 +192,7 @@ oc rsh dc/inventory cat /app/config/project-defaults.yml
 Also verify that the PostgreSQL database is actually used by the Inventory service. Check the
 Inventory pod logs:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc logs dc/inventory | grep hibernate.dialect
 
@@ -202,7 +202,7 @@ oc logs dc/inventory | grep hibernate.dialect
 You can also connect to Inventory PostgreSQL database and check if the seed data is
 loaded into the database.
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc rsh dc/inventory-postgresql
 ----
@@ -214,9 +214,9 @@ Once connected to the PostgreSQL container, run the following:
 Run this command inside the Inventory PostgreSQL container, after opening a remote shell to it.
 ====
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
-$ psql -U inventory -c "select * from inventory"
+psql -U inventory -c "select * from inventory"
 
  itemid | quantity
 ------------------
@@ -230,7 +230,7 @@ $ psql -U inventory -c "select * from inventory"
  444436 |       42
 (8 rows)
 
-$ exit
+exit
 ----
 
 You have now created a config map that holds the configuration content for Inventory and can be updated
@@ -251,7 +251,7 @@ configuration using an alternative `application.properties` backed by a config m
 Create a config map with the the Spring Boot configuration content using the PostgreSQL database
 credentials:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 cat <<EOF > ./application.properties
 spring.datasource.url=jdbc:postgresql://catalog-postgresql:5432/catalog
@@ -266,7 +266,7 @@ The hostname defined for the PostgreSQL connection-url corresponds to the Postgr
 service name published on OpenShift. This name will be resolved by the internal DNS server
 exposed by OpenShift and accessible to containers running on OpenShift.
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc create configmap catalog --from-file=./application.properties
 ----
@@ -305,7 +305,7 @@ command:
 ====
 Delete the Catalog container to make it start again and look for the config maps:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc delete pod -l app=catalog
 ----
@@ -313,7 +313,7 @@ oc delete pod -l app=catalog
 When the Catalog container is ready, verify that the PostgreSQL database is being
 used. Check the Catalog pod logs:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc logs dc/catalog | grep hibernate.dialect
 
@@ -322,7 +322,7 @@ oc logs dc/catalog | grep hibernate.dialect
 
 You can also connect to the Catalog PostgreSQL database and verify that the seed data is loaded:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc rsh dc/catalog-postgresql
 ----
@@ -331,9 +331,9 @@ Once connected to the PostgreSQL container, run the following:
 
 NOTE: Run this command inside the Catalog PostgreSQL container, after opening a remote shell to it.
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
-$ psql -U catalog -c "select item_id, name, price from product"
+psql -U catalog -c "select item_id, name, price from product"
 
  item_id |            name             | price
 ----------------------------------------------
@@ -347,7 +347,7 @@ $ psql -U catalog -c "select item_id, name, price from product"
  444436  | Lytro Camera                |  44.3
 (8 rows)
 
-$ exit
+exit
 ----
 
 #### Sensitive Configuration Data
@@ -370,7 +370,7 @@ You won't create any secrets in this lab however you have already created 2 secr
 the PostgreSQL databases for Inventory and Catalog services. The PostgreSQL template by default stores
 the database credentials in a secret in the project it's being created:
 
-[source,bash,role=copypaste]
+[source,bash]
 ----
 oc describe secret catalog-postgresql
 
