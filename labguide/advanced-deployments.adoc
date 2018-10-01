@@ -233,7 +233,7 @@ and click the *Start Pipeline* button.  This will load the updated Jenkinsfile
 and run our new pipeline.
 
 Notice the new canary stages
-image::ad-updated-pipeline.png[]
+image:ad-updated-pipeline.png[]
 
 Observe our terminal with the looping curl command and verify that our update
 is still being returned with every few requests.
@@ -247,7 +247,7 @@ If this is your first time logging into Jenkins, accept the certificate and clic
 the `Allow Selected Permissions` button.
 
 Next click the *Proceed* button to continue rolling out the Canary
-image::ad-proceed.png[]
+image:ad-proceed.png[]
 
 At this point, the new version is being fully scaled out.  If you navigate back
 to the terminal with the looping curl command, you should see the update being
