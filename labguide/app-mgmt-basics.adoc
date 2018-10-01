@@ -108,7 +108,12 @@ git push -u origin master
 ----
 
 Enter your Git repository username and password if you get asked to enter your
-credentials. Go to your `cloud-native-labs` repository web interface and refresh
+credentials. This may require you to provision a developer token in GitHub.
+To do this, from the settings of your GitHub profile, navigate to
+*Developer Settings >> Personal Access Tokens* and click *Generate new token*.
+Use this generated token as your password.
+
+Go to your `cloud-native-labs` repository web interface and refresh
 the page. You should see the project files in the repository.
 
 ### Core OpenShift Concepts
@@ -585,6 +590,15 @@ oc new-app nodejs:8~. \
 Lets use the OpenShift Web Console to monitor the rest of our deployments:
 
 *link:{{ WEB_CONSOLE_URL }}/project/coolstore/overview[]*
+
+[NOTE]
+====
+If you see the below error regarding metrics, click on the *Open Metrics URL*
+link and accept the invalid certificate.  Navigate back to the OpenShift Web
+Console and refresh the page.
+
+image::metrics_error.png[]
+====
 
 ### Background: Routes
 .OpenShift Route

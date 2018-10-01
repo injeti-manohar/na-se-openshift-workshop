@@ -9,15 +9,14 @@ In this lab, you will update your CI/CD pipeline to introduce a new canary stage
 With a canary release, a new version of the application is deployed into production
 alongside the old version.  Using advanced traffic routing, a small amount of
 production traffic is directed to the new version.  The canary is monitored for
-issues, and if all is good, then it is slowly scaled out to server more and more
-production traffic until it completely supersedes the old version.  This approach
-allows development teams to release changes faster but reduce the risk of deploying
-error prone code.
+issues, and if all is good, then it is slowly scaled out until it completely
+supersedes the old version.  This approach allows development teams to release
+changes faster but reduce the risk of deploying error prone code.
 
 image::ad-routes.png[]
 
-To start the lab, open a new {{ SSH_CONSOLE_URL }}[terminal] and create a curl loop that will
-continuously hit your gateway api:
+To start the lab, open a new {{ SSH_CONSOLE_URL }}[terminal] and create a curl
+loop that will continuously hit your gateway api:
 
 [source, bash]
 ----
@@ -228,3 +227,107 @@ Commit and push your changes:
 git commit -am "Updating Pipeline for Canary Release"
 git push
 ----
+
+From the Web Console, navigate back to the gateway-pipeline (*Builds > Pipelines*)
+and click the *Start Pipeline* button.  This will load the updated Jenkinsfile
+and run our new pipeline.
+
+Notice the new canary stages
+image::ad-updated-pipeline.png[]
+
+Observe our terminal with the looping curl command and verify that our update
+is still being returned with every few requests.
+
+The pipeline should now be paused waiting for you to verify the canary.  Click
+on the *input required* link and log into Jenkins.  Jenkins uses the same
+authentication as OpenShift.  Log in with `teamuser1` as the user and `openshift`
+as the password.
+
+If this is your first time logging into Jenkins, accept the certificate and click
+the `Allow Selected Permissions` button.
+
+Next click the *Proceed* button to continue rolling out the Canary
+image::ad-proceed.png[]
+
+At this point, the new version is being fully scaled out.  If you navigate back
+to the terminal with the looping curl command, you should see the update being
+returned with all requests.
+
+#### Run the Pipeline on Every Code Change
+
+Manually triggering the deployment pipeline to run is useful but the real goal
+is to be able to build and deploy every change in code or configuration at least
+to lower environments (e.g. dev and test) and ideally all the way to production
+with some manual approvals in-place.
+
+In order to automate triggering the pipeline, you can define a webhook on your
+Git repository to notify OpenShift on every commit that is made to the Git
+repository and trigger a pipeline execution.
+
+You can get see the webhook links in the OpenShift Web Console by going to
+**Build >> Pipelines**, clicking on the pipeline and going to the
+**Configurations** tab.
+
+{% if MINISHIFT == true %}
+
+Copy the Generic webhook url which you will need in the next steps.
+
+Go to Gogs and your **gateway-wildfly-swarm** Git repository, then click on **Settings**.
+
+image::cd-gogs-settings-link.png[]
+
+On the left menu, click on **Webhooks** and then on **Add Webhook** button and then **Gogs**.
+
+Create a webhook with the following details:
+
+* **Payload URL**: paste the Generic webhook url you copied from the `gateway-pipeline`
+* **Content type**: `application/json`
+
+Click on **Add Webhook**.
+
+image::cd-gogs-webhook-add.png[]
+
+All done. You can click on the newly defined webhook to see the list of *Recent Delivery*.
+Clicking on the **Test Delivery** button allows you to manually trigger the webhook for
+testing purposes. Click on it and verify that the `gateway-pipeline` start running
+immediately.
+
+{% else %}
+
+Copy the GitHub webhook url which you will need in the next steps.
+
+Go to GitHub and your **cloud-native-labs** Git repository, then click on **Settings**.
+
+image::cd-github-settings-link.png[]
+
+On the left menu, click on **Webhooks** and then on **Add webhook** button. Enter your password
+once more if you are ask to do so.
+
+Create a webhook with the following details:
+
+* **Payload URL**: paste the GitHub webhook url you copied from the `gateway-pipeline`
+* **Content type**: `application/json`
+* Disable SSL by clicking on *Disable SSL verification*.
+
+The reason for disabling SSL in this lab is that we are using self-generated certificates
+in this lab environment which cannot be verified by GitHub.
+
+[NOTE]
+====
+When adding a webhook to GitHub, your OpenShift cluster should be accessible to the
+public internet in order for GitHub to be able to invoke the provided webhook url.
+
+If you are not sure, enter your OpenShift Web Console url on https://isitup.org[Is It Up?]
+and you'll know!
+====
+Click on **Add webhook**
+
+image::cd-github-webhook-add.png[]
+
+All done. You can click on the newly defined webhook to see the list of **Recent Delivery**.
+Clicking on a delivery, allows you to manually trigger the webhook for testing purposes by
+clicking on the **Redeliver** button.
+
+{% endif %}
+
+*Congratulations on completing the OpenShift Test Drive Workshop!*
