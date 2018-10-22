@@ -3,6 +3,12 @@
 In this lab we will learn how to monitor application health using OpenShift
 health probes and how you can see container resource consumption using metrics.
 
+[WARNING]
+=====
+Before continuing, make sure you are logged in with the built-in system administrator account in OpenShift.
+
+ oc login -u teamuser1 -p openshift
+=====
 ####  Health Probes
 
 When building microservices, monitoring becomes of extreme importance to make sure all services
@@ -291,7 +297,7 @@ to see a more detailed view of the metrics charts.
 
 image::health-metrics-detailed.png[]
 
-[NOTE]
+[WARNING]
 ====
 If you see the following error, click on the link to hawkular in the error
 message and accept the self-signed certificate

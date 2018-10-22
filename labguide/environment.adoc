@@ -1,14 +1,11 @@
 ## Environment Overview
 
-You will be interacting with an OpenShift 3.9 cluster that is running on {{
-ENVIRONMENT }}. During the lab you will also install Container-Native Storage
-3.9. The complete environment consists of the following systems:
+You will be interacting with an OpenShift 3.10 cluster that is running on {{
+ENVIRONMENT }}. The complete environment consists of the following systems:
 
 * 1 master node
 * 1 infrastructure node
 * 6 "application" nodes
-** 3 will run workload and the initial Container Native Storage instances
-** 3 will be added to the cluster later
 * 1 server running Red Hat Identity Management (IdM, for LDAP authentication)
 
 .Lab Environment Overview

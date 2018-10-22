@@ -6,8 +6,8 @@ basics of application management on OpenShift Container Platform.
 You will be deploying the CoolStore demo application which is comprised of 4
 microservices.  The frontend is written in NodeJS which talks to an API Gateway.
 
-The API Gateway is created using a reactive framework called https://vertx.io[Vertx].
-is a toolkit for building reactive applications on the Java Virtual Machine (JVM).
+The API Gateway is created using a reactive framework called https://vertx.io[Vertx],
+which is a toolkit for building reactive applications on the Java Virtual Machine (JVM).
 Vert.x does not impose a specific framework or packaging model and can be used
 within your existing applications and frameworks in order to add reactive
 functionality by just adding the Vert.x jar files to the application classpath.
@@ -22,7 +22,7 @@ https://developers.redhat.com/blog/2017/08/24/the-skinny-on-fat-thin-hollow-and-
 
 [NOTE]
 ====
-You will want to have an SSH session opened to the `master` server for these
+You will want to have an {{ SSH_CONSOLE_URL }}[SSH] session opened to the `master` server for these
 lab exercises.
 ====
 
@@ -591,7 +591,7 @@ Lets use the OpenShift Web Console to monitor the rest of our deployments:
 
 *link:{{ WEB_CONSOLE_URL }}/project/coolstore/overview[]*
 
-[NOTE]
+[WARNING]
 ====
 If you see the below error regarding metrics, click on the *Open Metrics URL*
 link and accept the invalid certificate.  Navigate back to the OpenShift Web
