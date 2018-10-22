@@ -5,7 +5,7 @@ teams can release new versions into production faster while reducing risk.
 OpenShift provides capabilities natively in the platform to make it easy to
 implement these types of scenarios.
 
-In this lab, you will update your CI/CD pipeline to introduce a new canary stage.
+In this lab, you will create a CI/CD pipeline to orchestrate a new canary release.
 With a canary release, a new version of the application is deployed into production
 alongside the old version.  Using advanced traffic routing, a small amount of
 production traffic is directed to the new version.  The canary is monitored for

@@ -9,11 +9,8 @@ vars:
 modules:
   activate:
   - environment
-  - installation
   - app-mgmt-basics
-  - template-quota-limits
   - health
   - fault-tolerance
   - app-config
-  - continuous-delivery
   - advanced-deployments
