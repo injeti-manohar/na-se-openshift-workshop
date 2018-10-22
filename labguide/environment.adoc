@@ -33,9 +33,9 @@ publicly access via SSH and the browser is the OpenShift Master node:
 | Master Node       | {{MASTER_EXTERNAL_FQDN}}
 |==============================================
 
-You will be installing OpenShift Container Platform v3.9 using the advanced
+OpenShift Container Platform v3.10 was installed using the advanced
 installation method, which involves executing various Ansible playbooks. You
-will also install Container Native Storage v3.9.
+will explore the installation in the next lab.
 
 Note that references to product documentation will be specifically pointing
 to the 3.9 versions, but newer software and documentation versions may be
