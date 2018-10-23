@@ -702,8 +702,8 @@ commands, you deployed an application composed of several microservices and made
 it accessible to the outside world, all without writing a single Dockerfile.
 
 ----
-# Create Project
-oc new-project coolstore
+# Switch to Project
+oc project userXY
 
 # Setup Permissions
 oc policy add-role-to-user view -z default

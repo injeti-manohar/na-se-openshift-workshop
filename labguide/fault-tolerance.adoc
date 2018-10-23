@@ -80,14 +80,15 @@ Endpoints:              10.129.0.146:8080,10.129.0.232:8080
 
 [NOTE]
 ====
-The load-balancer by default, sends the client to the same pod on consequent requests. The
-https://docs.openshift.com/container-platform/3.5/architecture/core_concepts/routes.html#load-balancing[load-balancing strategy]
-can be specified using an annotation on the route object. Run the following to change the load-balancing
-strategy to round robin:
-
-    oc annotate route/web haproxy.router.openshift.io/balance=roundrobin
-
+When a route has multiple endpoints, HAProxy distributes requests to the route
+among the endpoints based on the selected load-balancing strategy. This applies
+when no persistence information is available, such as on the first request in a
+session.  The https://docs.openshift.com/container-platform/3.11/architecture/networking/routes.html#load-balancing[load-balancing strategy]
+can be specified using an annotation on the route object. A route specific
+annotation, haproxy.router.openshift.io/balance, can be used to control specific
+routes
 ====
+
 #### Scaling Applications on Auto-pilot
 
 Although scaling up and scaling down pods are automated and easy using OpenShift, however it still

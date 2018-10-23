@@ -1,15 +1,11 @@
 ## Environment Overview
 
-You will be interacting with an OpenShift 3.9 cluster that is running on {{
-ENVIRONMENT }}. During the lab you will also install Container-Native Storage
-3.9. The complete environment consists of the following systems:
+You will be interacting with an OpenShift 3.11 cluster that is running on {{
+ENVIRONMENT }}. The complete environment consists of the following systems:
 
 * 1 master node
 * 1 infrastructure node
-* 6 "application" nodes
-** 3 will run workload and the initial Container Native Storage instances
-** 3 will be added to the cluster later
-* 1 server running Red Hat Identity Management (IdM, for LDAP authentication)
+* 2 "application" nodes
 
 .Lab Environment Overview
 [options="header"]
@@ -31,17 +27,12 @@ publicly access via SSH and the browser is the OpenShift Master node:
 | Master Node       | {{MASTER_EXTERNAL_FQDN}}
 |==============================================
 
-You will be installing OpenShift Container Platform v3.9 using the advanced
-installation method, which involves executing various Ansible playbooks. You
-will also install Container Native Storage v3.9.
+You will be installing OpenShift Container Platform v3.11 using the advanced
+installation method, which involves executing various Ansible playbooks.
 
 Note that references to product documentation will be specifically pointing
-to the 3.9 versions, but newer software and documentation versions may be
+to the 3.11 versions, but newer software and documentation versions may be
 available.
-
-## How to get support
-
-In case of technical or functional problems please reach out to mailto:openshift-ops-testdrive@redhat.com[openshift-ops-testdrive@redhat.com]. This is a ticket based system where you will be able to reach the authors and supporters of this Test Drive Experience.
 
 ## Conventions
 You will see various code and command blocks throughout these exercises. Some of
@@ -55,25 +46,23 @@ some command to modify
 ----
 
 ### Logging in
-Most of the exercises in this lab will be facilitated using the OpenShift command line client on the master node. For convenient access to the master's command line we provide a web-based SSH console: {{ SSH_CONSOLE_URL }}
+Most of the exercises in this lab will be facilitated using the OpenShift
+command line client. For convenient access you can connect to a web-based SSH
+console: {{ SSH_CONSOLE_URL }}
 
-Use the user name `cloud-user` and the password `{{ KEYNAME }}` when prompted.
+Use the user name assigned to you and the password `{{ KEYNAME }}` when prompted.
 
-.SSH Console Login
-image::webssh_login.png[]
+After accepting the self-signed certificate, click the `Allow selected permissions`
+button to proceed into the terminal.
 
-If you prefer to use an SSH client on your system you can do that too, using the same credentials:
+image::authorize_access.png[]
+
+If you prefer to use an oc client on your system you can do that too, using the
+same credentials:
+
+NOTE: Replace userXY below with the user ID that was assigned to you.
 
 [source,bash]
 ----
-ssh -l cloud-user {{MASTER_EXTERNAL_FQDN}}
+oc login https://{{MASTER_EXTERNAL_FQDN}} --username=userXY --password={{KEYNAME}}
 ----
-
-Once you are logged in you end up on the OpenShift Master Node:
-
-----
-[cloud-user@master ~]$
-----
-
-The `cloud-user` account has password-less sudo privileges and SSH login on
-all systems using internal addressing from the table above.
