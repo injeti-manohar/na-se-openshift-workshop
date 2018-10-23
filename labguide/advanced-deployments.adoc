@@ -20,7 +20,7 @@ loop that will continuously hit your gateway api:
 
 [source, bash]
 ----
-while true; do curl http://gateway-coolstore.{{OCP_ROUTING_SUFFIX}}/hello; done
+while true; do curl http://gateway-userXY.{{OCP_ROUTING_SUFFIX}}/hello; done
 ----
 
 We will use this terminal to view how our canary is slowly rolling out.
@@ -57,16 +57,14 @@ shows the traffic splits:
 
 image::ad-traffic-splits.png[]
 
-[NOTE]
-====
-In the previous lab you should have already disabled build and deploy triggers
-on the gateway application.  As a reminder, these triggers were removed with
-the following command:
+
+Disable build and deploy triggers on the gateway application using the following
+command:
 
 ```
 oc set triggers dc/gateway --manual
 ```
-====
+
 
 ### Testing the Canary
 
@@ -124,13 +122,14 @@ see responses from your canary version:
 
 image::ad-canary-results.png[]
 
-Building upon the previous lab, you will now update the Continuous Delivery
-pipeline to orchestrate our canary process.
+You will now update the Continuous Delivery pipeline to orchestrate our canary
+process.
 
 Paste the updated pipeline below into your shell:
 
 [source, bash, copypaste]
 ----
+user=userXY
 cat <<EOF > Jenkinsfile
 pipeline {
   agent {
@@ -177,14 +176,14 @@ pipeline {
             echo "Rollback for canary deployment."
             script {
                 openshift.withCluster {
-                    openshift.withProject('coolstore') {
+                    openshift.withProject('${user}') {
                         openshift.selector('dc', 'gateway-canary').rollout().undo()
 
                         //wait for rollout
                         openshift.selector('dc', 'gateway-canary').rollout().status()
 
                         //set canary imagestream back to production tag
-                        openshift.tag("coolstore/gateway:latest", "coolstore/gateway-canary:latest")
+                        openshift.tag("coolstore/gateway:latest", "${user}/gateway-canary:latest")
                     }
                 }
             }
@@ -199,9 +198,9 @@ pipeline {
     steps {
         script {
             openshift.withCluster() {
-                openshift.withProject("coolstore") {
+                openshift.withProject('${user}') {
                     //Tag latest from build namespace
-                    openshift.tag("coolstore/gateway-canary:latest", "coolstore/gateway:latest")
+                    openshift.tag("${user}/gateway-canary:latest", "${user}/gateway:latest")
 
                     /***
                      * Rollout
@@ -224,9 +223,30 @@ Commit and push your changes:
 
 [source, bash]
 ----
-git commit -am "Updating Pipeline for Canary Release"
+git add Jenkinsfile
+git commit -am "Adding Pipeline for Canary Release"
 git push
 ----
+
+Deploy a Jenkins server using the provided template and container image that
+comes out-of-the-box with OpenShift:
+
+[source, bash]
+----
+oc new-app jenkins-ephemeral
+----
+
+After Jenkins is deployed and is running (verify in web console), then create a
+deployment pipeline by running the following command:
+
+[source, bash]
+----
+oc new-app . --name=gateway-pipeline --strategy=pipeline
+----
+
+The above command creates a new build config of type pipeline which is automatically
+configured to fetch the `Jenkinsfile` from the Git repository of the current folder
+and execute it on Jenkins.
 
 From the Web Console, navigate back to the gateway-pipeline (*Builds > Pipelines*)
 and click the *Start Pipeline* button.  This will load the updated Jenkinsfile

@@ -157,7 +157,7 @@ a config map into the Inventory container:
 
 [source,bash]
 ----
-oc volume dc/inventory --add --configmap-name=inventory --mount-path=/app/config
+oc set volume dc/inventory --add --configmap-name=inventory --mount-path=/app/config
 ----
 
 The above command mounts the content of the `inventory` config map as a file inside the Inventory container

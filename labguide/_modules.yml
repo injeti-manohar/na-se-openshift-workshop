@@ -84,8 +84,6 @@ modules:
       KEYNAME: "example-qwiklab-keyname"
   app-mgmt-basics:
     name: Application Management Basics
-    requires:
-      - installation
   health:
       name: Monitoring Application health
   fault-tolerance:

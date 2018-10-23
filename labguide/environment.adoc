@@ -19,11 +19,6 @@ ENVIRONMENT }}. During the lab you will also install Container-Native Storage
 | Infrastructure Node        | {{INFRA_INTERNAL_FQDN}}
 | Application Node #1        | {{NODE1_INTERNAL_FQDN}}
 | Application Node #2        | {{NODE2_INTERNAL_FQDN}}
-| Application Node #3        | {{NODE3_INTERNAL_FQDN}}
-| Application Node #4        | {{NODE4_INTERNAL_FQDN}}
-| Application Node #5        | {{NODE5_INTERNAL_FQDN}}
-| Application Node #6        | {{NODE6_INTERNAL_FQDN}}
-| IdM Server     |    {{IDM_INTERNAL_FQDN}}
 |==============================================
 
 All addresses are internal to the lab environment. The only system you

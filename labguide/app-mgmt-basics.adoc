@@ -50,7 +50,6 @@ $ ls -l
 drwxr-xr-x  6 user  wheel   204 Aug 14 14:50 catalog-spring-boot
 drwxr-xr-x  6 user  wheel   204 Aug 14 14:50 gateway-vertx
 drwxr-xr-x  6 user  wheel   204 Aug 14 14:50 inventory-wildfly-swarm
-drwxr-xr-x  9 user  wheel   306 Aug 14 14:50 solutions
 drwxr-xr-x  8 user  wheel   272 Aug 14 14:50 web-nodejs
 ----
 
@@ -130,10 +129,12 @@ them, and users may be able to access multiple *Projects*.
 
 For this exercise, first create a *Project* to hold our resources:
 
+NOTE: Replace userXY with the user id assigned to you
+
 [source,bash]
 ----
-oc login -u teamuser1 -p openshift
-oc new-project coolstore
+oc login -u userXY -p openshift
+oc project {{COOLSTORE_PROJECT}}
 ----
 
 #### Deploy Microservices
@@ -158,7 +159,8 @@ to the OpenShift platform.
 ----
 oc new-app redhat-openjdk18-openshift:1.2~. \
     --context-dir=inventory-wildfly-swarm \
-    --name=inventory
+    --name=inventory \
+    -e GC_MAX_METASPACE_SIZE=200
 ----
 
 The output will look like:
@@ -589,7 +591,8 @@ oc new-app nodejs:8~. \
 
 Lets use the OpenShift Web Console to monitor the rest of our deployments:
 
-*link:{{ WEB_CONSOLE_URL }}/project/coolstore/overview[]*
+NOTE: Replace userXY in the url below with the user id assigned to you.
+*link:{{ WEB_CONSOLE_URL }}/project/userXY/overview[]*
 
 [NOTE]
 ====
@@ -655,10 +658,10 @@ You will see something like:
 
 ----
 NAME        HOST/PORT                                                     PATH      SERVICES   PORT       TERMINATION   WILDCARD
-catalog     catalog-coolstore.{{OCP_ROUTING_SUFFIX}}             catalog     8080-tcp                 None
-gateway     gateway-coolstore.{{OCP_ROUTING_SUFFIX}}             gateway     8080-tcp                 None
-inventory   inventory-coolstore.{{OCP_ROUTING_SUFFIX}}           inventory   8080-tcp                 None
-web         web-coolstore.{{OCP_ROUTING_SUFFIX}}                 web         8080-tcp                 None
+catalog     catalog-userXY.{{OCP_ROUTING_SUFFIX}}             catalog     8080-tcp                 None
+gateway     gateway-userXY.{{OCP_ROUTING_SUFFIX}}             gateway     8080-tcp                 None
+inventory   inventory-userXY.{{OCP_ROUTING_SUFFIX}}           inventory   8080-tcp                 None
+web         web-userXY.{{OCP_ROUTING_SUFFIX}}                 web         8080-tcp                 None
 ----
 
 If you take a look at the `HOST/PORT` column, you'll see a familiar looking
@@ -690,7 +693,9 @@ bridges the "real" internet to the SDN.
 At this point our application should be deployed and accessible through the
 Web UI Route:
 
-*link:http://web-coolstore.{{OCP_ROUTING_SUFFIX}}[]*
+NOTE: Replace userXY in the url below with the user id assigned to you.
+
+*link:http://web-userXY.{{OCP_ROUTING_SUFFIX}}[]*
 
 If you take a step back to examine everything you've done so far, in just a few
 commands, you deployed an application composed of several microservices and made
@@ -706,7 +711,8 @@ oc policy add-role-to-user view -z default
 # Deploy Services
 oc new-app redhat-openjdk18-openshift:1.2~. \
     --context-dir=inventory-wildfly-swarm \
-    --name=inventory
+    --name=inventory \
+    -e GC_MAX_METASPACE_SIZE=200
 
 oc new-app redhat-openjdk18-openshift:1.2~. \
   --context-dir=catalog-spring-boot \
