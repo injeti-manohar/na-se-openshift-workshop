@@ -129,7 +129,9 @@ Paste the updated pipeline below into your shell:
 
 [source, bash, copypaste]
 ----
+# Export your user ID first
 user=userXY
+
 cat <<EOF > Jenkinsfile
 pipeline {
   agent {
@@ -260,7 +262,7 @@ is still being returned with every few requests.
 
 The pipeline should now be paused waiting for you to verify the canary.  Click
 on the *input required* link and log into Jenkins.  Jenkins uses the same
-authentication as OpenShift.  Log in with `teamuser1` as the user and `openshift`
+authentication as OpenShift.  Log in with your assigned user id and `openshift`
 as the password.
 
 If this is your first time logging into Jenkins, accept the certificate and click

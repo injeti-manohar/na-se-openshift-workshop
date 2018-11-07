@@ -134,7 +134,7 @@ NOTE: Replace userXY with the user id assigned to you
 [source,bash]
 ----
 oc login -u userXY -p openshift
-oc project {{COOLSTORE_PROJECT}}
+oc new-project {{COOLSTORE_PROJECT}}
 ----
 
 #### Deploy Microservices
@@ -618,15 +618,6 @@ request to determine where to proxy the connection. You can optionally define
 security, such as TLS, for the *Route*. If you want your *Services* (and by
 extension, your *Pods*) to be accessible to the outside world, then you need to
 create a *Route*.
-
-Do you remember setting up the router? You probably don't. That's because the
-installer settings created a router for you! The router lives in the `default`
-*Project*, and you can see information about it with the following command:
-
-[source,bash]
-----
-oc describe dc router -n default
-----
 
 #### Creating a Route
 Creating a *Route* is a pretty straight-forward process.  You simply `expose`
