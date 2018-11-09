@@ -5,7 +5,7 @@ ENVIRONMENT }}. The complete environment consists of the following systems:
 
 * 1 master node
 * 1 infrastructure node
-* 2 "application" nodes
+* 20 "application" nodes
 
 .Lab Environment Overview
 [options="header"]
@@ -15,6 +15,7 @@ ENVIRONMENT }}. The complete environment consists of the following systems:
 | Infrastructure Node        | {{INFRA_INTERNAL_FQDN}}
 | Application Node #1        | {{NODE1_INTERNAL_FQDN}}
 | Application Node #2        | {{NODE2_INTERNAL_FQDN}}
+| ...
 |==============================================
 
 All addresses are internal to the lab environment. The only system you
