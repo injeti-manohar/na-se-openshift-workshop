@@ -239,26 +239,6 @@ git commit -am "Adding Pipeline for Canary Release"
 git push
 ----
 
-Deploy a Jenkins server using the provided template and container image that
-comes out-of-the-box with OpenShift:
-
-[source, bash]
-----
-oc new-app jenkins-ephemeral
-----
-
-After Jenkins is deployed and is running (verify in web console), then create a
-deployment pipeline by running the following command:
-
-[source, bash]
-----
-oc new-app . --name=gateway-pipeline --strategy=pipeline
-----
-
-The above command creates a new build config of type pipeline which is automatically
-configured to fetch the `Jenkinsfile` from the Git repository of the current folder
-and execute it on Jenkins.
-
 From the Web Console, navigate back to the gateway-pipeline (*Builds > Pipelines*)
 and click the *Start Pipeline* button.  This will load the updated Jenkinsfile
 and run our new pipeline.
