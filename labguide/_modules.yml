@@ -90,5 +90,7 @@ modules:
       name: Service Resilience and Fault Tolerance
   app-config:
       name: Application Configuration
+  continuous-delivery:
+      name: Continuous Delivery
   advanced-deployments:
       name: Advanced Application Deployment

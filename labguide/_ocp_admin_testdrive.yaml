@@ -13,4 +13,5 @@ modules:
   - health
   - fault-tolerance
   - app-config
+  - continuous-delivery
   - advanced-deployments
