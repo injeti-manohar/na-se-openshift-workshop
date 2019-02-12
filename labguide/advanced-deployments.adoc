@@ -106,6 +106,14 @@ oc start-build gateway-canary
 
 NOTE: You can tail the build log by running `oc logs -f bc/gateway-canary`
 
+Because we disabled triggers in a prior command, once the build is complete we
+need to trigger a rollout manually.  Run the following command:
+
+[source,bash]
+----
+oc rollout latest dc/gateway-canary
+----
+
 Go back to your terminal with the looping curl command and observe that none of
 the requests are returning your canary version yet.  This is because we need to
 update the route weights.
